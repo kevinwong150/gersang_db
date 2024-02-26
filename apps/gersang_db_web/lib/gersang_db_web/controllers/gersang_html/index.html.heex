@@ -1,0 +1,11 @@
+<div>
+  This is gersang.
+
+  <div class="flex flex-col">
+    <%= for item <- @items do %>
+      <div>
+        <b><%= item.name %></b>
+      </div>
+    <% end %>
+  </div>
+</div>
