@@ -19,7 +19,10 @@ services:
     command: [
       "sh",
       "-c",
-      "mix deps.get && mix ecto.drop && mix ecto.create && mix ecto.load && mix phx.server"
+      # use seeds
+      "mix deps.get && mix ecto.reset && mix phx.server"
+      # use dump
+      # "mix deps.get && mix ecto.drop && mix ecto.create && mix ecto.load && mix phx.server"
     ] # compile elm, run migrations and fire up phoenix
     volumes:
       - .:/app

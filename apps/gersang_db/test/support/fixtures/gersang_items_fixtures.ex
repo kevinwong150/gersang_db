@@ -13,7 +13,7 @@ defmodule GersangDb.GersangItemsFixtures do
       |> Enum.into(%{
 
       })
-      |> GersangDb.GersangItems.create_gersang_item()
+      |> GersangDb.GersangItems.create_item()
 
     gersang_item
   end

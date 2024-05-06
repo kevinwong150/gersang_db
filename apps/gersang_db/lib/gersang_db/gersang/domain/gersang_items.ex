@@ -12,6 +12,8 @@ defmodule GersangDb.Domain.GersangItems do
     field(:artisan_product?, :boolean, default: false)
     field(:artisan_production_amount, :integer)
     field(:artisan_production_fee, :integer)
+
+    timestamps()
   end
 
   @doc false
@@ -23,7 +25,7 @@ defmodule GersangDb.Domain.GersangItems do
       :margin,
       :market_price,
       :cost_per,
-      :artisan_product,
+      :artisan_product?,
       :artisan_production_amount,
       :artisan_production_fee
     ])
