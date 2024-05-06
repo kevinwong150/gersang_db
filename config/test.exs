@@ -6,9 +6,9 @@ import Config
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :gersang_db, GersangDb.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
+  username: "gersang_db",
+  password: "gersang_db",
+  hostname: "db",
   database: "gersang_db_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2

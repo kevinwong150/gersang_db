@@ -13,3 +13,17 @@ services:
     - ./db:/var/lib/postgresql/data
     ports:
     - 5432:5432
+  web:
+    build: .
+    working_dir: /app
+    command: [
+      "sh",
+      "-c",
+      "mix deps.get && mix ecto.drop && mix ecto.create && mix ecto.load && mix phx.server"
+    ] # compile elm, run migrations and fire up phoenix
+    volumes:
+      - .:/app
+    ports: 
+    - 4000:4000
+    depends_on:
+      - db 
