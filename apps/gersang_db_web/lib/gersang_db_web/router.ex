@@ -19,6 +19,12 @@ defmodule GersangDbWeb.Router do
 
     get "/", PageController, :home
     get "/gersang", GersangController, :index
+
+    live "/gersang/items", GersangItemLive.Index, :index
+    live "/gersang/items/new", GersangItemLive.Index, :new
+    live "/gersang/items/:id/edit", GersangItemLive.Index, :edit
+    live "/gersang/items/:id", GersangItemLive.Show, :show
+    live "/gersang/items/:id/show/edit", GersangItemLive.Show, :edit
   end
 
   # Other scopes may use custom stacks.

@@ -1,0 +1,44 @@
+<.header>
+  Listing Items
+  <:actions>
+    <.link patch={~p"/gersang/items/new"}>
+      <.button>New Gersang item</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="items"
+  rows={@streams.items}
+  row_click={fn {_id, gersang_item} -> JS.navigate(~p"/gersang/items/#{gersang_item}") end}
+>
+  <:col :let={{_id, gersang_item}} label="name"><%= gersang_item.name %></:col>
+  <:col :let={{_id, gersang_item}} label="margin"><%= gersang_item.margin %></:col>
+  <:col :let={{_id, gersang_item}} label="market_price"><%= gersang_item.market_price %></:col>
+
+  <:action :let={{_id, gersang_item}}>
+    <div class="sr-only">
+      <.link navigate={~p"/gersang/items/#{gersang_item}"}>Show</.link>
+    </div>
+    <.link patch={~p"/gersang/items/#{gersang_item}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, gersang_item}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: gersang_item.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="gersang_item-modal" show on_cancel={JS.patch(~p"/gersang/items")}>
+  <.live_component
+    module={GersangDbWeb.GersangItemLive.FormComponent}
+    id={@gersang_item.id || :new}
+    title={@page_title}
+    action={@live_action}
+    gersang_item={@gersang_item}
+    patch={~p"/items"}
+  />
+</.modal>

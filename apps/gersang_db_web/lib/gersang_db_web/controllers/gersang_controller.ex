@@ -8,8 +8,6 @@ defmodule GersangDbWeb.GersangController do
     # so skip the default app layout.
 
     items = GersangItems.list_items()
-    |> IO.inspect(label: :items)
-
 
     render(conn, :index, items: items)
   end
