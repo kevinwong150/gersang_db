@@ -1,7 +1,7 @@
 defmodule GersangDbWeb.GersangItemLive.Show do
   use GersangDbWeb, :live_view
 
-  alias GersangDb.GersangItems
+  alias GersangDb.GersangItem
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +13,7 @@ defmodule GersangDbWeb.GersangItemLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:gersang_item, GersangItems.get_item!(id))}
+     |> assign(:gersang_item, GersangItem.get_item!(id))}
   end
 
   defp page_title(:show), do: "Show Gersang item"

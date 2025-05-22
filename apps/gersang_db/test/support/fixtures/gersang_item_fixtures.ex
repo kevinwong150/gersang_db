@@ -1,7 +1,7 @@
-defmodule GersangDb.GersangItemsFixtures do
+defmodule GersangDb.GersangItemFixtures do
   @moduledoc """
   This module defines test helpers for creating
-  entities via the `GersangDb.GersangItems` context.
+  entities via the `GersangDb.GersangItem` context.
   """
 
   @doc """
@@ -13,7 +13,7 @@ defmodule GersangDb.GersangItemsFixtures do
       |> Enum.into(%{
 
       })
-      |> GersangDb.GersangItems.create_item()
+      |> GersangDb.GersangItem.create_item()
 
     gersang_item
   end

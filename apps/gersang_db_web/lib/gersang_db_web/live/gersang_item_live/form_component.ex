@@ -1,7 +1,6 @@
 defmodule GersangDbWeb.GersangItemLive.FormComponent do
   use GersangDbWeb, :live_component
-
-  alias GersangDb.GersangItems
+  alias GersangDb.GersangItem
 
   @impl true
   def render(assigns) do
@@ -10,15 +9,21 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
       <.header>
         <%= @title %>
         <:subtitle>Use this form to manage gersang_item records in your database.</:subtitle>
-      </.header>
-
-      <.simple_form
+      </.header>      <.simple_form
         for={@form}
         id="gersang_item-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
       >
+        <.input field={@form[:name]} type="text" label="Name" />
+        <.input field={@form[:tags]} type="text" label="Tags" placeholder="Comma separated tags" />
+        <.input field={@form[:margin]} type="number" label="Margin" step="any" />
+        <.input field={@form[:market_price]} type="number" label="Market Price" />
+        <.input field={@form[:cost_per]} type="number" label="Cost Per" step="any" />
+        <.input field={@form[:artisan_product?]} type="checkbox" label="Artisan Product?" />
+        <.input field={@form[:artisan_production_amount]} type="number" label="Artisan Production Amount" />
+        <.input field={@form[:artisan_production_fee]} type="number" label="Artisan Production Fee" />
 
         <:actions>
           <.button phx-disable-with="Saving...">Save Gersang item</.button>
@@ -30,7 +35,7 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
 
   @impl true
   def update(%{gersang_item: gersang_item} = assigns, socket) do
-    changeset = GersangItems.change_item(gersang_item)
+    changeset = GersangItem.change_item(gersang_item)
 
     {:ok,
      socket
@@ -42,7 +47,7 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
   def handle_event("validate", %{"gersang_item" => gersang_item_params}, socket) do
     changeset =
       socket.assigns.gersang_item
-      |> GersangItems.change_item(gersang_item_params)
+      |> GersangItem.change_item(gersang_item_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign_form(socket, changeset)}
@@ -53,7 +58,7 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
   end
 
   defp save_gersang_item(socket, :edit, gersang_item_params) do
-    case Gersang.update_item(socket.assigns.gersang_item, gersang_item_params) do
+    case GersangItem.update_item(socket.assigns.gersang_item, gersang_item_params) do
       {:ok, gersang_item} ->
         notify_parent({:saved, gersang_item})
 
@@ -68,7 +73,7 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
   end
 
   defp save_gersang_item(socket, :new, gersang_item_params) do
-    case GersangItems.create_item(gersang_item_params) do
+    case GersangItem.create_item(gersang_item_params) do
       {:ok, gersang_item} ->
         notify_parent({:saved, gersang_item})
 

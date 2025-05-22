@@ -1,12 +1,12 @@
-defmodule GersangDb.GersangItems do
+defmodule GersangDb.GersangItem do
   @moduledoc """
-  The GersangItems context.
+  The GersangItem context.
   """
 
   import Ecto.Query, warn: false
   alias GersangDb.Repo
 
-  alias GersangDb.Domain.GersangItems
+  alias GersangDb.Domain.GersangItem
 
   @doc """
   Returns the list of gersang_items.
@@ -18,7 +18,7 @@ defmodule GersangDb.GersangItems do
 
   """
   def list_items do
-    Repo.all(GersangItems)
+    Repo.all(GersangItem)
   end
 
   @doc """
@@ -35,7 +35,7 @@ defmodule GersangDb.GersangItems do
       ** (Ecto.NoResultsError)
 
   """
-  def get_item!(id), do: Repo.get!(GersangItems, id)
+  def get_item!(id), do: Repo.get!(GersangItem, id)
 
   @doc """
   Creates a gersang_item.
@@ -43,15 +43,15 @@ defmodule GersangDb.GersangItems do
   ## Examples
 
       iex> create_item(%{field: value})
-      {:ok, %GersangItems{}}
+      {:ok, %GersangItem{}}
 
       iex> create_item(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
   def create_item(attrs \\ %{}) do
-    %GersangItems{}
-    |> GersangItems.changeset(attrs)
+    %GersangItem{}
+    |> GersangItem.changeset(attrs)
     |> Repo.insert()
   end
 
@@ -61,15 +61,15 @@ defmodule GersangDb.GersangItems do
   ## Examples
 
       iex> update_item(gersang_item, %{field: new_value})
-      {:ok, %GersangItems{}}
+      {:ok, %GersangItem{}}
 
       iex> update_item(gersang_item, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_item(%GersangItems{} = gersang_item, attrs) do
+  def update_item(%GersangItem{} = gersang_item, attrs) do
     gersang_item
-    |> GersangItems.changeset(attrs)
+    |> GersangItem.changeset(attrs)
     |> Repo.update()
   end
 
@@ -79,13 +79,13 @@ defmodule GersangDb.GersangItems do
   ## Examples
 
       iex> delete_item(gersang_item)
-      {:ok, %GersangItems{}}
+      {:ok, %GersangItem{}}
 
       iex> delete_item(gersang_item)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_item(%GersangItems{} = gersang_item) do
+  def delete_item(%GersangItem{} = gersang_item) do
     Repo.delete(gersang_item)
   end
 
@@ -95,10 +95,10 @@ defmodule GersangDb.GersangItems do
   ## Examples
 
       iex> change_item(gersang_item)
-      %Ecto.Changeset{data: %GersangItems{}}
+      %Ecto.Changeset{data: %GersangItem{}}
 
   """
-  def change_item(%GersangItems{} = gersang_item, attrs \\ %{}) do
-    GersangItems.changeset(gersang_item, attrs)
+  def change_item(%GersangItem{} = gersang_item, attrs \\ %{}) do
+    GersangItem.changeset(gersang_item, attrs)
   end
 end

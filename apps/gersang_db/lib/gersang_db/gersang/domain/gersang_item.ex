@@ -1,4 +1,4 @@
-defmodule GersangDb.Domain.GersangItems do
+defmodule GersangDb.Domain.GersangItem do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query, warn: false

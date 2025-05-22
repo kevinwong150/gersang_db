@@ -1,13 +1,13 @@
 defmodule GersangDbWeb.GersangController do
   use GersangDbWeb, :controller
 
-  alias GersangDb.GersangItems
+  alias GersangDb.GersangItem
 
   def index(conn, _params) do
     # The home page is often custom made,
     # so skip the default app layout.
 
-    items = GersangItems.list_items()
+    items = GersangItem.list_items()
 
     render(conn, :index, items: items)
   end
