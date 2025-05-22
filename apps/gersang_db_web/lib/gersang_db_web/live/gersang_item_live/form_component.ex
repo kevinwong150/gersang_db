@@ -17,7 +17,7 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
         phx-submit="save"
       >
         <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:tags]} type="text" label="Tags" placeholder="Comma separated tags" />
+        <.input field={@form[:tags] |> IO.inspect(labe: :tags)} type="text" label="Tags" placeholder="Comma separated tags" />
         <.input field={@form[:margin]} type="number" label="Margin" step="any" />
         <.input field={@form[:market_price]} type="number" label="Market Price" />
         <.input field={@form[:cost_per]} type="number" label="Cost Per" step="any" />
@@ -42,20 +42,36 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
      |> assign(assigns)
      |> assign_form(changeset)}
   end
-
   @impl true
   def handle_event("validate", %{"gersang_item" => gersang_item_params}, socket) do
+    processed_params = process_tags(gersang_item_params)
+
     changeset =
       socket.assigns.gersang_item
-      |> GersangItem.change_item(gersang_item_params)
+      |> IO.inspect(label: "Changeset before validate")
+      |> GersangItem.change_item(processed_params |> IO.inspect(label: "Params"))
+      |> IO.inspect(label: "Changeset after validate")
       |> Map.put(:action, :validate)
 
     {:noreply, assign_form(socket, changeset)}
   end
 
   def handle_event("save", %{"gersang_item" => gersang_item_params}, socket) do
-    save_gersang_item(socket, socket.assigns.action, gersang_item_params)
+    processed_params = process_tags(gersang_item_params)
+    save_gersang_item(socket, socket.assigns.action, processed_params)
   end
+
+  defp process_tags(%{"tags" => tags} = params) when is_binary(tags) do
+    processed_tags =
+      tags
+      |> String.split(",")
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+
+    %{params | "tags" => processed_tags}
+  end
+
+  defp process_tags(params), do: params
 
   defp save_gersang_item(socket, :edit, gersang_item_params) do
     case GersangItem.update_item(socket.assigns.gersang_item, gersang_item_params) do

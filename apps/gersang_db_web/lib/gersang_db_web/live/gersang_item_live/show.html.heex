@@ -8,7 +8,12 @@
   </:actions>
 </.header>
 
-<.list :if={false}>
+<.list>
+  <:item title="Name"><%= @gersang_item.name %></:item>
+  <:item title="Market Price"><%= @gersang_item.market_price %></:item>
+  <:item title="Margin"><%= @gersang_item.margin %></:item>
+  <:item title="Cost Per"><%= @gersang_item.cost_per %></:item>
+  <:item title="Tags"><%= GersangDbWeb.Utils.ViewHelpers.format_tags(@gersang_item.tags) %></:item>
 </.list>
 
 <.back navigate={~p"/gersang/items"}>Back to items</.back>

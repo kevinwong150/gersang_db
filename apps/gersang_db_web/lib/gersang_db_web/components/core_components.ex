@@ -304,7 +304,7 @@ defmodule GersangDbWeb.CoreComponents do
   def input(%{type: "checkbox"} = assigns) do
     assigns =
       assign_new(assigns, :checked, fn ->
-        Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
+        normalize_value("checkbox", assigns[:value])
       end)
 
     ~H"""
@@ -360,7 +360,7 @@ defmodule GersangDbWeb.CoreComponents do
           @errors != [] && "border-rose-400 focus:border-rose-400"
         ]}
         {@rest}
-      ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
+      ><%= normalize_value("textarea", @value) %></textarea>
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
@@ -375,7 +375,7 @@ defmodule GersangDbWeb.CoreComponents do
         type={@type}
         name={@name}
         id={@id}
-        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        value={normalize_value(@type, @value)}
         class={[
           "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
@@ -387,6 +387,16 @@ defmodule GersangDbWeb.CoreComponents do
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
+  end
+
+  defp normalize_value(type, value) when is_list(value) do
+    value
+    |> Enum.join(",")
+    |> then(&Phoenix.HTML.Form.normalize_value(type, &1))
+  end
+
+  defp normalize_value(type, value) do
+    Phoenix.HTML.Form.normalize_value(type, value)
   end
 
   @doc """
