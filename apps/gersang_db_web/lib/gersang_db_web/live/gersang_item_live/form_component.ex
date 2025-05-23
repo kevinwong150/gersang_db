@@ -17,7 +17,7 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
         phx-submit="save"
       >
         <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:tags] |> IO.inspect(labe: :tags)} type="text" label="Tags" placeholder="Comma separated tags" />
+        <.live_component module={GersangDbWeb.GersangItemLive.TagsInputComponent} id="tags-input" form={@form} />
         <.input field={@form[:margin]} type="number" label="Margin" step="any" />
         <.input field={@form[:market_price]} type="number" label="Market Price" />
         <.input field={@form[:cost_per]} type="number" label="Cost Per" step="any" />
@@ -48,9 +48,7 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
 
     changeset =
       socket.assigns.gersang_item
-      |> IO.inspect(label: "Changeset before validate")
-      |> GersangItem.change_item(processed_params |> IO.inspect(label: "Params"))
-      |> IO.inspect(label: "Changeset after validate")
+      |> GersangItem.change_item(processed_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign_form(socket, changeset)}

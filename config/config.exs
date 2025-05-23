@@ -49,7 +49,7 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "3.4.0",
+  version: "4.1.0",
   gersang_db_web: [
     args: ~w(
       --config=tailwind.config.js
