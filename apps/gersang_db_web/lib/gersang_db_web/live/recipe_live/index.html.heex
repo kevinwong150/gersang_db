@@ -12,7 +12,9 @@
   rows={@streams.gersang_recipes}
   row_click={fn {_id, gersang_recipe} -> JS.navigate(~p"/gersang/recipes/#{gersang_recipe}") end}
 >
-  <:col :let={{_id, gersang_recipe}} label="Name"><%= gersang_recipe.name %></:col>
+  <:col :let={{_id, gersang_recipe}} label="Product Item"><%= gersang_recipe.product_item.name %></:col>
+  <:col :let={{_id, gersang_recipe}} label="Material Item"><%= gersang_recipe.material_item.name %></:col>
+  <:col :let={{_id, gersang_recipe}} label="Media"><%= gersang_recipe.media %></:col>
   <:action :let={{_id, gersang_recipe}}>
     <div class="sr-only">
       <.link navigate={~p"/gersang/recipes/#{gersang_recipe}"}>Show</.link>
@@ -21,7 +23,7 @@
   </:action>
   <:action :let={{id, gersang_recipe}}>
     <.link
-      phx-click={JS.push("delete", value: %{id: gersang_recipe.id}) |> JS.confirm("Are you sure?")}
+      phx-click={JS.push("delete", value: %{id: gersang_recipe.id})}
       data-confirm="Are you sure?"
     >
       Delete
@@ -37,5 +39,7 @@
     action={@live_action}
     gersang_recipe={@gersang_recipe}
     patch={~p"/gersang/recipes"}
+    product_item_options={@product_item_options}
+    material_item_options={@material_item_options}
   />
 </.modal>

@@ -3,10 +3,19 @@ defmodule GersangDbWeb.RecipeLive.Index do
 
   alias GersangDb.Gersang.Recipes
   alias GersangDb.Domain.Recipe
+  alias GersangDb.GersangItem
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :gersang_recipes, Recipes.list_recipes())}
+    product_item_options = Enum.map(GersangItem.list_items(), fn item -> {item.name, item.id} end)
+    material_item_options = Enum.map(GersangItem.list_items(), fn item -> {item.name, item.id} end)
+    socket =
+      socket
+      |> stream(:gersang_recipes, Recipes.list_recipes())
+      |> assign(:product_item_options, product_item_options)
+      |> assign(:material_item_options, material_item_options)
+
+    {:ok, socket}
   end
 
   @impl true
@@ -38,5 +47,10 @@ defmodule GersangDbWeb.RecipeLive.Index do
     {:ok, _} = Recipes.delete_recipe(gersang_recipe)
 
     {:noreply, stream_delete(socket, :gersang_recipes, gersang_recipe)}
+  end
+
+  @impl true
+  def handle_info({GersangDbWeb.RecipeLive.FormComponent, {:saved, recipe}}, socket) do
+    {:noreply, stream_insert(socket, :gersang_recipes, recipe)}
   end
 end

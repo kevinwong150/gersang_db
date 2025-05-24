@@ -17,7 +17,7 @@ defmodule GersangDb.Gersang.Recipes do
 
   """
   def list_recipes do
-    Repo.all(Recipe)
+    Repo.all(from r in Recipe, preload: [:product_item, :material_item])
   end
 
   @doc """
