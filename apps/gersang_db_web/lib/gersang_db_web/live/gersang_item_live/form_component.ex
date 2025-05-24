@@ -31,7 +31,7 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <div>
-          <.live_component module={GersangDbWeb.MultiSelectComponent} id="tags-input" target_handler={@myself} form={@form} field={:tags} label={"Tags"} options={@tags_options} />
+          <.live_component module={GersangDbWeb.Component.MultiSelectComponent} id="tags-input" target_handler={@myself} form={@form} field={:tags} label={"Tags"} options={@tags_options} />
         </div>
         <.input field={@form[:margin]} type="number" label="Margin" step="any" />
         <.input field={@form[:market_price]} type="number" label="Market Price" />

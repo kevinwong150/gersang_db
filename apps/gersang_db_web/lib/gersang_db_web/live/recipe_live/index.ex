@@ -7,13 +7,12 @@ defmodule GersangDbWeb.RecipeLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    product_item_options = Enum.map(GersangItem.list_items(), fn item -> {item.name, item.id} end)
-    material_item_options = Enum.map(GersangItem.list_items(), fn item -> {item.name, item.id} end)
+    gersang_item_options = Enum.map(GersangItem.list_items(), fn item -> {item.name, item.id} end)
+
     socket =
       socket
       |> stream(:gersang_recipes, Recipes.list_recipes())
-      |> assign(:product_item_options, product_item_options)
-      |> assign(:material_item_options, material_item_options)
+      |> assign(:gersang_item_options, gersang_item_options)
 
     {:ok, socket}
   end
