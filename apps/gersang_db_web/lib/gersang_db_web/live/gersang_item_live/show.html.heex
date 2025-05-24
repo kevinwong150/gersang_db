@@ -15,7 +15,7 @@
   <:item title="Cost Per"><%= @gersang_item.cost_per %></:item>
   <:item title="Tags">
     <div class="flex flex-wrap items-center">
-      <%= if Enum.empty?(@gersang_item.tags) do %>
+      <%= if Enum.empty?(@gersang_item.tags || []) do %>
         <span class="text-gray-500 text-xs">No tags</span>
       <% else %>
         <%= for tag <- @gersang_item.tags do %>
