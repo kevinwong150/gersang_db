@@ -2,12 +2,13 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.2 (Debian 14.2-1.pgdg110+1)
--- Dumped by pg_dump version 15.6 (Debian 15.6-0+deb12u1)
+-- Dumped from database version 17.5 (Debian 17.5-1.pgdg120+1)
+-- Dumped by pg_dump version 17.5 (Debian 17.5-1.pgdg120+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -62,13 +63,50 @@ CREATE SEQUENCE public.gersang_items_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.gersang_items_id_seq OWNER TO gersang_db;
+ALTER SEQUENCE public.gersang_items_id_seq OWNER TO gersang_db;
 
 --
 -- Name: gersang_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: gersang_db
 --
 
 ALTER SEQUENCE public.gersang_items_id_seq OWNED BY public.gersang_items.id;
+
+
+--
+-- Name: recipes; Type: TABLE; Schema: public; Owner: gersang_db
+--
+
+CREATE TABLE public.recipes (
+    id bigint NOT NULL,
+    product_item_id bigint NOT NULL,
+    material_item_id bigint NOT NULL,
+    media character varying(255),
+    inserted_at timestamp(0) without time zone NOT NULL,
+    updated_at timestamp(0) without time zone NOT NULL
+);
+
+
+ALTER TABLE public.recipes OWNER TO gersang_db;
+
+--
+-- Name: recipes_id_seq; Type: SEQUENCE; Schema: public; Owner: gersang_db
+--
+
+CREATE SEQUENCE public.recipes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.recipes_id_seq OWNER TO gersang_db;
+
+--
+-- Name: recipes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: gersang_db
+--
+
+ALTER SEQUENCE public.recipes_id_seq OWNED BY public.recipes.id;
 
 
 --
@@ -91,14 +129,25 @@ ALTER TABLE ONLY public.gersang_items ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: recipes id; Type: DEFAULT; Schema: public; Owner: gersang_db
+--
+
+ALTER TABLE ONLY public.recipes ALTER COLUMN id SET DEFAULT nextval('public.recipes_id_seq'::regclass);
+
+
+--
 -- Data for Name: gersang_items; Type: TABLE DATA; Schema: public; Owner: gersang_db
 --
 
 COPY public.gersang_items (id, name, tags, margin, market_price, cost_per, "artisan_product?", artisan_production_amount, artisan_production_fee, inserted_at, updated_at) FROM stdin;
-2	Green Force Stone	{}	\N	\N	\N	f	\N	\N	2024-05-06 20:21:04	2024-05-06 20:21:08
-3	Yellow Force Stone	{}	\N	\N	\N	f	\N	\N	2024-05-06 20:21:04	2024-05-06 20:21:08
-4	Red Force Stone	{}	\N	\N	\N	f	\N	\N	2024-05-06 20:21:04	2024-05-06 20:21:08
-5	Blue Force Stone	{}	\N	\N	\N	f	\N	\N	2024-05-06 20:21:04	2024-05-06 20:21:08
+\.
+
+
+--
+-- Data for Name: recipes; Type: TABLE DATA; Schema: public; Owner: gersang_db
+--
+
+COPY public.recipes (id, product_item_id, material_item_id, media, inserted_at, updated_at) FROM stdin;
 \.
 
 
@@ -108,6 +157,7 @@ COPY public.gersang_items (id, name, tags, margin, market_price, cost_per, "arti
 
 COPY public.schema_migrations (version, inserted_at) FROM stdin;
 20240226160600	\N
+20250524025539	2025-05-24 14:50:11
 \.
 
 
@@ -115,7 +165,14 @@ COPY public.schema_migrations (version, inserted_at) FROM stdin;
 -- Name: gersang_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: gersang_db
 --
 
-SELECT pg_catalog.setval('public.gersang_items_id_seq', 5, true);
+SELECT pg_catalog.setval('public.gersang_items_id_seq', 21, true);
+
+
+--
+-- Name: recipes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: gersang_db
+--
+
+SELECT pg_catalog.setval('public.recipes_id_seq', 1, false);
 
 
 --
@@ -127,11 +184,42 @@ ALTER TABLE ONLY public.gersang_items
 
 
 --
+-- Name: recipes recipes_pkey; Type: CONSTRAINT; Schema: public; Owner: gersang_db
+--
+
+ALTER TABLE ONLY public.recipes
+    ADD CONSTRAINT recipes_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: gersang_db
 --
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: recipes_product_item_id_material_item_id_index; Type: INDEX; Schema: public; Owner: gersang_db
+--
+
+CREATE UNIQUE INDEX recipes_product_item_id_material_item_id_index ON public.recipes USING btree (product_item_id, material_item_id);
+
+
+--
+-- Name: recipes recipes_material_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: gersang_db
+--
+
+ALTER TABLE ONLY public.recipes
+    ADD CONSTRAINT recipes_material_item_id_fkey FOREIGN KEY (material_item_id) REFERENCES public.gersang_items(id);
+
+
+--
+-- Name: recipes recipes_product_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: gersang_db
+--
+
+ALTER TABLE ONLY public.recipes
+    ADD CONSTRAINT recipes_product_item_id_fkey FOREIGN KEY (product_item_id) REFERENCES public.gersang_items(id);
 
 
 --

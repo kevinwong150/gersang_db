@@ -1,0 +1,41 @@
+<.header>
+  Listing Recipes
+  <:actions>
+    <.link patch={~p"/gersang/recipes/new"}>
+      <.button>New Recipe</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="gersang_recipes"
+  rows={@streams.gersang_recipes}
+  row_click={fn {_id, gersang_recipe} -> JS.navigate(~p"/gersang/recipes/#{gersang_recipe}") end}
+>
+  <:col :let={{_id, gersang_recipe}} label="Name"><%= gersang_recipe.name %></:col>
+  <:action :let={{_id, gersang_recipe}}>
+    <div class="sr-only">
+      <.link navigate={~p"/gersang/recipes/#{gersang_recipe}"}>Show</.link>
+    </div>
+    <.link patch={~p"/gersang/recipes/#{gersang_recipe}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, gersang_recipe}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: gersang_recipe.id}) |> JS.confirm("Are you sure?")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="gersang_recipe-modal" show on_cancel={JS.patch(~p"/gersang/recipes")}>
+  <.live_component
+    module={GersangDbWeb.RecipeLive.FormComponent}
+    id={@gersang_recipe.id || :new}
+    title={@page_title}
+    action={@live_action}
+    gersang_recipe={@gersang_recipe}
+    patch={~p"/gersang/recipes"}
+  />
+</.modal>

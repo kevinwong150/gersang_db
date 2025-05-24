@@ -2,6 +2,7 @@ defmodule GersangDb.Domain.GersangItem do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query, warn: false
+  alias GersangDb.Domain.Recipe
 
   schema "gersang_items" do
     field(:name, :string)
@@ -13,12 +14,15 @@ defmodule GersangDb.Domain.GersangItem do
     field(:artisan_production_amount, :integer)
     field(:artisan_production_fee, :integer)
 
+    has_many :recipes_as_product, Recipe, foreign_key: :product_item_id
+    has_many :recipes_as_material, Recipe, foreign_key: :material_item_id
+
     timestamps()
   end
 
   @doc false
-  def changeset(user, attrs) do
-    user
+  def changeset(item, attrs) do
+    item
     |> cast(attrs, [
       :name,
       :tags,

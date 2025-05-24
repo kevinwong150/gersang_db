@@ -12,6 +12,22 @@
 
 gersang_item_attrs = [
   %{
+    name: "Green Force Stone",
+    market_price: 0
+  },
+  %{
+    name: "Yellow Force Stone",
+    market_price: 0
+  },
+  %{
+    name: "Red Force Stone",
+    market_price: 0
+  },
+  %{
+    name: "Blue Force Stone",
+    market_price: 0
+  },
+  %{
     name: "Moon Seal",
     market_price: 2000
   },

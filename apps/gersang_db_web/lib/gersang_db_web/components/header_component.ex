@@ -10,13 +10,21 @@ defmodule GersangDbWeb.HeaderComponent do
           <.link href={~p"/gersang"}>Gersang DB</.link>
         </h1>
         <nav>
-          <ul>
+          <ul class="flex space-x-4">
             <li>
               <.link
                 href={~p"/gersang/items"}
                 class="text-theme-secondary-light hover:text-theme-secondary-light"
               >
                 Items
+              </.link>
+            </li>
+            <li>
+              <.link
+                href={~p"/gersang/recipes"}
+                class="text-theme-secondary-light hover:text-theme-secondary-light"
+              >
+                Recipes
               </.link>
             </li>
           </ul>
