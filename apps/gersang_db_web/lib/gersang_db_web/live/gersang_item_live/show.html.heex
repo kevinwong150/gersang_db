@@ -13,7 +13,19 @@
   <:item title="Market Price"><%= @gersang_item.market_price %></:item>
   <:item title="Margin"><%= @gersang_item.margin %></:item>
   <:item title="Cost Per"><%= @gersang_item.cost_per %></:item>
-  <:item title="Tags"><%= GersangDbWeb.Utils.ViewHelpers.format_tags(@gersang_item.tags) %></:item>
+  <:item title="Tags">
+    <div class="flex flex-wrap items-center">
+      <%= if Enum.empty?(@gersang_item.tags) do %>
+        <span class="text-gray-500 text-xs">No tags</span>
+      <% else %>
+        <%= for tag <- @gersang_item.tags do %>
+          <span class="bg-teal-500 text-white mr-1 mb-1 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold">
+            <%= tag %>
+          </span>
+        <% end %>
+      <% end %>
+    </div>
+  </:item>
 </.list>
 
 <.back navigate={~p"/gersang/items"}>Back to items</.back>

@@ -52,11 +52,11 @@ config :tailwind,
   version: "4.1.0",
   gersang_db_web: [
     args: ~w(
-      --config=tailwind.config.js
-      --input=css/app.css
-      --output=../priv/static/assets/app.css
+      --config=./apps/gersang_db_web/assets/tailwind.config.js
+      --input=./apps/gersang_db_web/assets/css/app.css
+      --output=./apps/gersang_db_web/priv/static/assets/app.css
     ),
-    cd: Path.expand("../apps/gersang_db_web/assets", __DIR__)
+    cd: Path.expand("../", __DIR__)
   ]
 
 # Configures Elixir's Logger

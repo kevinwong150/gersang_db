@@ -2,6 +2,18 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
   use GersangDbWeb, :live_component
   alias GersangDb.GersangItem
 
+  @default_tags [
+    "Alchemist",
+    "Metallurgist",
+    "Blacksmith",
+    "Loot",
+    "Cash Item",
+    "Facility",
+    "Herbalist",
+    "Miner",
+    "Crafting"
+  ]
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -9,7 +21,8 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
       <.header>
         <%= @title %>
         <:subtitle>Use this form to manage gersang_item records in your database.</:subtitle>
-      </.header>      <.simple_form
+      </.header>
+      <.simple_form
         for={@form}
         id="gersang_item-form"
         phx-target={@myself}
@@ -17,7 +30,9 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
         phx-submit="save"
       >
         <.input field={@form[:name]} type="text" label="Name" />
-        <.live_component module={GersangDbWeb.GersangItemLive.TagsInputComponent} id="tags-input" form={@form} />
+        <div>
+          <.live_component module={GersangDbWeb.GersangItemLive.MultiSelectComponent} id="tags-input" target_handler={@myself} form={@form} field={:tags} label={"Tags"} options={@tags_options} />
+        </div>
         <.input field={@form[:margin]} type="number" label="Margin" step="any" />
         <.input field={@form[:market_price]} type="number" label="Market Price" />
         <.input field={@form[:cost_per]} type="number" label="Cost Per" step="any" />
@@ -40,6 +55,7 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
+     |> assign(:tags_options, @default_tags)
      |> assign_form(changeset)}
   end
   @impl true
