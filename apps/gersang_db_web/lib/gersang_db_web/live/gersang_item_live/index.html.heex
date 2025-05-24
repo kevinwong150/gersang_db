@@ -15,6 +15,19 @@
   <:col :let={{_id, gersang_item}} label="name"><%= gersang_item.name %></:col>
   <:col :let={{_id, gersang_item}} label="margin"><%= gersang_item.margin %></:col>
   <:col :let={{_id, gersang_item}} label="market_price"><%= gersang_item.market_price %></:col>
+  <:col :let={{_id, gersang_item}} label="tags">
+    <div class="flex flex-wrap items-center">
+      <%= if Enum.empty?(gersang_item.tags || []) do %>
+        <span class="text-gray-500 text-xs">-</span>
+      <% else %>
+        <%= for tag <- gersang_item.tags do %>
+          <span class="bg-teal-500 text-white mr-1 mb-1 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold">
+            <%= tag %>
+          </span>
+        <% end %>
+      <% end %>
+    </div>
+  </:col>
 
   <:action :let={{_id, gersang_item}}>
     <div class="sr-only">
