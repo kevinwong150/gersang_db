@@ -1,4 +1,4 @@
-defmodule GersangDbWeb.GersangItemLive.MultiSelectComponent do
+defmodule GersangDbWeb.MultiSelectComponent do
   use GersangDbWeb, :live_component
 
   @default_options ["food", "toy", "boy", "girl", "animal", "plant"]
