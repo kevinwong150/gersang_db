@@ -10,15 +10,9 @@ defmodule GersangDbWeb.RecipeLive.Show do
   end
 
   @impl true
-  def handle_params(%{"id" => id}, _, socket) do
-    recipe = Recipes.get_recipe!(id)
-    # Preload associations if they are not already preloaded by get_recipe!
-    # This ensures product_item and material_item are available.
-    # If Recipes.get_recipe! already preloads, this explicit preload might be redundant
-    # but ensures the data is loaded for the template.
-    full_recipe =
-      GersangDb.Repo.preload(recipe, [:product_item, :material_item])
-
+  def handle_params(%{"product_id" => product_id, "media" => media}, _, socket) do
+    recipe = Recipes.get_recipe_by_product_and_media!(product_id, media)
+    full_recipe = GersangDb.Repo.preload(recipe, [:product_item, :material_item])
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))

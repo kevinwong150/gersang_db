@@ -37,6 +37,37 @@ defmodule GersangDb.Gersang.Recipes do
   def get_recipe!(id), do: Repo.get!(Recipe, id)
 
   @doc """
+  Gets a recipe by product_id and media.
+
+  Raises `Ecto.NoResultsError` if the Recipe does not exist.
+
+  ## Examples
+
+      iex> get_recipe_by_product_and_media!(123, "media")
+      %Recipe{}
+
+      iex> get_recipe_by_product_and_media!(456, "media")
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_recipe_by_product_and_media!(product_id, media) do
+    Repo.one!(from r in Recipe, where: r.product_item_id == ^product_id and r.media == ^media, preload: [:product_item, :material_item])
+  end
+
+  @doc """
+  Gets all recipes by product_id and media.
+
+  ## Examples
+
+      iex> list_recipes_by_product_and_media(123, "media")
+      [%Recipe{}, ...]
+
+  """
+  def list_recipes_by_product_and_media(product_id, media) do
+    Repo.all(from r in Recipe, where: r.product_item_id == ^product_id and r.media == ^media, preload: [:product_item, :material_item])
+  end
+
+  @doc """
   Creates a recipe.
 
   ## Examples

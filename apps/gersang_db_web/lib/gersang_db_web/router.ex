@@ -28,9 +28,11 @@ defmodule GersangDbWeb.Router do
 
     live "/gersang/recipes", RecipeLive.Index, :index
     live "/gersang/recipes/new", RecipeLive.Index, :new
-    live "/gersang/recipes/:id/edit", RecipeLive.Index, :edit
-    live "/gersang/recipes/:id", RecipeLive.Show, :show
-    live "/gersang/recipes/:id/show/edit", RecipeLive.Show, :edit
+    live "/gersang/recipes/:product_id/:media/edit", RecipeLive.Index, :edit
+    live "/gersang/recipes/:product_id/:media", RecipeLive.Show, :show
+    # removed old id-based routes for show/edit
+    # live "/gersang/recipes/:id/edit", RecipeLive.Index, :edit
+    # live "/gersang/recipes/:id", RecipeLive.Show, :show
   end
 
   # Other scopes may use custom stacks.
