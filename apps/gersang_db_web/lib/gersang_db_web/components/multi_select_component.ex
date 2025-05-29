@@ -150,25 +150,6 @@ defmodule GersangDbWeb.Component.MultiSelectComponent do
     |> Enum.reject(&(&1 == ""))
   end
 
-  # Helper to convert form input value (string or list) to a canonical list of items
-  defp form_input_to_canonical_list(form_input_value) do
-    cond do
-      is_list(form_input_value) ->
-        form_input_value
-        |> trim_items() # Ensure all elements are trimmed and no empty strings
-        |> Enum.uniq()
-        |> Enum.sort()
-      is_binary(form_input_value) ->
-        form_input_value
-        |> String.split(",", trim: true) # Split and trim parts
-        |> trim_items() # Further ensure all elements are trimmed and no empty strings
-        |> Enum.uniq()
-        |> Enum.sort()
-      true ->
-        [] # Handles nil or other unexpected types, defaulting to an empty list
-    end
-  end
-
   defp add_item(item, assigns) do
     {updated_params, new_items_list} = update_items(%{add: item}, assigns)
 

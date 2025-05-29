@@ -1,10 +1,7 @@
 defmodule GersangDbWeb.RecipeLive.FormComponent do
   use GersangDbWeb, :live_component
-  alias GersangDb.Gersang.Recipes
   alias GersangDb.GersangItem
-  alias GersangDb.Domain.Recipe
   alias GersangDb.Domain.GersangItem, as: GersangItemDomain
-  alias GersangDbWeb.InputsComponent
   import Ecto.Query
 
   defmodule EmbeddedRecipe do
