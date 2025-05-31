@@ -62,7 +62,7 @@
                     <span class="text-green-800 font-medium"><%= material.name %></span>
                     <span class="text-green-700 font-mono text-sm">
                       <%= if material.market_price do %>
-                        <%= format_number_with_commas(material.market_price) %>
+                        <%= ViewHelpers.format_number_with_commas(material.market_price) %>
                       <% else %>
                         N/A
                       <% end %>

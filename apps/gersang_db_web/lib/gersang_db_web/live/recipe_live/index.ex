@@ -1,6 +1,7 @@
 defmodule GersangDbWeb.RecipeLive.Index do
   use GersangDbWeb, :live_view
 
+  alias GersangDbWeb.Utils.ViewHelpers
   alias GersangDb.Gersang.Recipes
   alias GersangDb.Domain.Recipe
   alias GersangDb.GersangItem
@@ -108,10 +109,10 @@ defmodule GersangDbWeb.RecipeLive.Index do
         total = Enum.reduce(prices, 0, fn {_name, price}, acc -> acc + price end)
         breakdown =
           prices
-          |> Enum.map(fn {_name, price} -> format_number_with_commas(price) end)
+          |> Enum.map(fn {_name, price} -> ViewHelpers.format_number_with_commas(price) end)
           |> Enum.join(" + ")
 
-        formatted_total = format_number_with_commas(total)
+        formatted_total = ViewHelpers.format_number_with_commas(total)
         abbreviated = format_abbreviated_number(total)
 
         total_display = case abbreviated do
@@ -123,14 +124,6 @@ defmodule GersangDbWeb.RecipeLive.Index do
     end
   end
 
-  # Helper function to format numbers with commas
-  defp format_number_with_commas(number) when is_integer(number) do
-    number
-    |> Integer.to_string()
-    |> String.reverse()
-    |> String.replace(~r/(\d{3})(?=\d)/, "\\1,")
-    |> String.reverse()
-  end
   # Helper function to format abbreviated numbers for large values
   defp format_abbreviated_number(number) when number >= 1_000_000_000 do
     abbreviated = number / 1_000_000_000
