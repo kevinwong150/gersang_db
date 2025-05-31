@@ -17,24 +17,28 @@ defmodule GersangDbWeb.RecipeLive.Show do
       all_recipes
       |> Enum.group_by(& &1.product_item)
       |> Enum.map(fn {product, product_recipes} ->
-        all_unique_materials_for_product =
+        # Prepare materials with amounts for cost calculation, similar to index.ex
+        all_materials_with_amounts_for_product =
           product_recipes
-          |> Enum.map(& &1.material_item)
-          |> Enum.uniq_by(& &1.id)
-          |> Enum.sort_by(& &1.name)
+          |> Enum.map(fn recipe ->
+            %{item: recipe.material_item, amount: recipe.material_amount}
+          end)
 
-        {total_cost, cost_breakdown} = calculate_product_cost(all_unique_materials_for_product)
+        {total_cost, cost_breakdown} = calculate_product_cost(all_materials_with_amounts_for_product)
 
         by_media =
           product_recipes
           |> Enum.group_by(& &1.media)
           |> Enum.map(fn {media, media_recipes} ->
-            material_items_for_media =
+            materials_with_amounts_for_media =
               media_recipes
-              |> Enum.map(& &1.material_item)
-              |> Enum.uniq_by(& &1.id)
-              |> Enum.sort_by(& &1.name)
-            %{media: media, materials: material_items_for_media}
+              |> Enum.map(fn recipe ->
+                %{item: recipe.material_item, amount: recipe.material_amount}
+              end)
+              |> Enum.uniq_by(fn material_info -> material_info.item.id end)
+              |> Enum.sort_by(fn material_info -> material_info.item.name end)
+
+            %{media: media, materials: materials_with_amounts_for_media}
           end)
           |> Enum.sort_by(& &1.media)
 
@@ -115,25 +119,24 @@ defmodule GersangDbWeb.RecipeLive.Show do
   end
   defp page_title(_), do: "Recipe Details"
 
-  defp calculate_product_cost(materials) do
-    materials_with_prices =
-      materials
-      |> Enum.filter(&(&1.market_price && &1.market_price > 0))
-      |> Enum.map(&{&1.name, &1.market_price})
+  # Updated calculate_product_cost function from index.ex
+  defp calculate_product_cost(materials_with_amounts) do
+    materials_for_costing =
+      materials_with_amounts
+      |> Enum.filter(fn %{item: material, amount: _amount} -> material.market_price && material.market_price > 0 end)
+      |> Enum.map(fn %{item: material, amount: amount} ->
+        %{name: material.name, total_price: material.market_price * amount}
+      end)
 
-    case materials_with_prices do
+    case materials_for_costing do
       [] ->
-        {0, "0 = 0"}
-      prices ->
-        total = Enum.reduce(prices, 0, fn {_name, price}, acc -> acc + price end)
-
-        breakdown_parts =
-          if Enum.empty?(prices) do
-            ["0"]
-          else
-            Enum.map(prices, fn {_name, price} -> ViewHelpers.format_number_with_commas(price) end)
-          end
-        breakdown = Enum.join(breakdown_parts, " + ")
+        {0, "No prices available"}
+      priced_materials ->
+        total = Enum.reduce(priced_materials, 0, fn material, acc -> acc + material.total_price end)
+        breakdown =
+          priced_materials
+          |> Enum.map(fn material -> "#{ViewHelpers.format_number_with_commas(material.total_price)}" end)
+          |> Enum.join(" + ")
 
         formatted_total = ViewHelpers.format_number_with_commas(total)
         abbreviated = format_abbreviated_number(total)
@@ -142,6 +145,7 @@ defmodule GersangDbWeb.RecipeLive.Show do
           nil -> formatted_total
           abbrev -> "#{formatted_total} (#{abbrev})"
         end
+
         {total, "#{breakdown} = #{total_display}"}
     end
   end
