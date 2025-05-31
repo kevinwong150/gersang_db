@@ -17,6 +17,10 @@ defmodule GersangDb.Domain.GersangItem do
     has_many :recipes_as_product, Recipe, foreign_key: :product_item_id
     has_many :recipes_as_material, Recipe, foreign_key: :material_item_id
 
+    # New associations for direct access to materials and products
+    has_many :materials, through: [:recipes_as_product, :material_item]
+    has_many :products, through: [:recipes_as_material, :product_item]
+
     timestamps()
   end
 

@@ -81,6 +81,7 @@ CREATE TABLE public.recipes (
     product_item_id bigint NOT NULL,
     material_item_id bigint NOT NULL,
     media character varying(255),
+    material_amount integer NOT NULL,
     inserted_at timestamp(0) without time zone NOT NULL,
     updated_at timestamp(0) without time zone NOT NULL
 );
@@ -140,6 +141,22 @@ ALTER TABLE ONLY public.recipes ALTER COLUMN id SET DEFAULT nextval('public.reci
 --
 
 COPY public.gersang_items (id, name, tags, margin, market_price, cost_per, "artisan_product?", artisan_production_amount, artisan_production_fee, inserted_at, updated_at) FROM stdin;
+22	Green Force Stone	\N	\N	0	\N	f	\N	\N	2025-05-31 18:21:33	2025-05-31 18:21:33
+23	Yellow Force Stone	\N	\N	0	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+24	Red Force Stone	\N	\N	0	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+25	Blue Force Stone	\N	\N	0	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+26	Moon Seal	\N	\N	2000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+27	Sun Seal	\N	\N	1000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+28	Piece of Deities(Thunder)	\N	\N	850000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+29	Piece of Deities(Earth)	\N	\N	890000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+30	Piece of Deities(Wind)	\N	\N	1400000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+31	Piece of Deities(Water)	\N	\N	1980000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+32	Piece of Deities(Flame)	\N	\N	3000000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+33	Small Elemental Stone of Flame	\N	\N	940000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+34	Small Elemental Stone of Water	\N	\N	850000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+35	Small Elemental Stone of Wind	\N	\N	790000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+36	Small Elemental Stone of Thunder	\N	\N	850000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
+37	Small Elemental Stone of Earth	\N	\N	8500000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
 \.
 
 
@@ -147,7 +164,7 @@ COPY public.gersang_items (id, name, tags, margin, market_price, cost_per, "arti
 -- Data for Name: recipes; Type: TABLE DATA; Schema: public; Owner: gersang_db
 --
 
-COPY public.recipes (id, product_item_id, material_item_id, media, inserted_at, updated_at) FROM stdin;
+COPY public.recipes (id, product_item_id, material_item_id, media, material_amount, inserted_at, updated_at) FROM stdin;
 \.
 
 
@@ -157,7 +174,7 @@ COPY public.recipes (id, product_item_id, material_item_id, media, inserted_at, 
 
 COPY public.schema_migrations (version, inserted_at) FROM stdin;
 20240226160600	\N
-20250524025539	2025-05-24 14:50:11
+20250524025539	2025-05-31 18:22:42
 \.
 
 
@@ -165,7 +182,7 @@ COPY public.schema_migrations (version, inserted_at) FROM stdin;
 -- Name: gersang_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: gersang_db
 --
 
-SELECT pg_catalog.setval('public.gersang_items_id_seq', 21, true);
+SELECT pg_catalog.setval('public.gersang_items_id_seq', 37, true);
 
 
 --
@@ -197,13 +214,6 @@ ALTER TABLE ONLY public.recipes
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
-
-
---
--- Name: recipes_product_item_id_material_item_id_index; Type: INDEX; Schema: public; Owner: gersang_db
---
-
-CREATE UNIQUE INDEX recipes_product_item_id_material_item_id_index ON public.recipes USING btree (product_item_id, material_item_id);
 
 
 --

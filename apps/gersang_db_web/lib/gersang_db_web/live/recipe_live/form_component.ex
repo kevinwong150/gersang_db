@@ -14,7 +14,9 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
     embedded_schema do
       field :media, :string
       embeds_one :product_item, GersangItem
-      embeds_many :material_items, GersangItem
+      embeds_many :material_items, GersangItem do
+        field :material_amount, :integer
+      end
       field :product_item_id, :integer, virtual: true
     end
 
@@ -22,7 +24,13 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
       embedded_recipe
       |> cast(attrs, [:media, :product_item_id])
       |> cast_embed(:product_item, with: &GersangItemDomain.changeset/2, required: true)
-      |> cast_embed(:material_items, with: &GersangItemDomain.changeset/2, required: true)
+      |> cast_embed(:material_items, with: fn item_struct, params_for_item ->
+           # item_struct is a %GersangItem{} that also has a :material_amount field.
+           # params_for_item contains "id" (for the GersangItem) and "material_amount".
+           # We cast :id to associate the correct GersangItem and :material_amount for its quantity in the recipe.
+           Ecto.Changeset.cast(item_struct, params_for_item, [:material_amount])
+           |> Ecto.Changeset.validate_required([:material_amount])
+         end, required: true)
       |> validate_required([:media])
     end
   end
@@ -49,6 +57,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
           <div class="flex items-center gap-2 mb-2">
 
             <.input field={material_form[:id]} type="select" label={"Material #{material_form.index + 1}"} options={@gersang_item_options} required />
+            <.input field={material_form[:material_amount]} value={material_form[:material_amount].value || 5} type="number" label="Amount" required />
 
             <.button
               type="button"
@@ -111,7 +120,13 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
                   true ->
                     nil
                 end
-              if material_item_struct, do: Map.from_struct(material_item_struct), else: nil
+
+              if material_item_struct do
+                Map.from_struct(material_item_struct)
+                |> Map.put(:material_amount, recipe.material_amount)
+              else
+                nil
+              end
             end)
             |> Enum.reject(&is_nil/1)
 
@@ -122,12 +137,11 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
             "material_items" => material_items_attrs_list
           }
         true ->
-          %{}
+          %{"material_items" => [%{}]}
       end
 
     form_changeset = EmbeddedRecipe.changeset(%EmbeddedRecipe{}, initial_changeset_attrs)
 
-    # Store original values for deletion during save
     original_product_item_id =
       case initial_changeset_attrs do
         %{"product_item_id" => id} when not is_nil(id) -> id
@@ -171,29 +185,41 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
           end
       end
 
-    # Extract material_items params, which is now a map of indexed items
     material_items_params = embedded_recipe_params["material_items"] || %{}
 
     material_items_attrs_list =
       material_items_params
-      |> Map.values() # Get the list of material item params
+      |> Map.values()
       |> Enum.map(fn item_params ->
         material_item_id_str = item_params["id"]
+        amount_str = item_params["material_amount"]
 
-        case material_item_id_str do
-          nil -> nil # Or handle as an error/empty item
-          "" -> nil  # Or handle as an error/empty item
-          id_str ->
-            case Integer.parse(id_str) do
-              {parsed_id, _} ->
-                found_item = Enum.find(all_gersang_items, &(&1.id == parsed_id))
-                if found_item, do: Map.from_struct(found_item), else: nil
-              :error ->
-                nil # Or handle parse error
+        item_base_attrs =
+          case material_item_id_str do
+            nil -> nil
+            "" -> nil
+            id_str ->
+              case Integer.parse(id_str) do
+                {parsed_id, _} ->
+                  found_item = Enum.find(all_gersang_items, &(&1.id == parsed_id))
+                  if found_item, do: Map.from_struct(found_item), else: nil
+                :error ->
+                  nil
+              end
+          end
+
+        if item_base_attrs do
+          amount =
+            case Integer.parse(amount_str || "") do
+              {val, ""} -> val
+              _ -> nil
             end
+          Map.put(item_base_attrs, :material_amount, amount)
+        else
+          nil
         end
       end)
-      |> Enum.reject(&is_nil/1) # Remove any nils if items couldn't be found/parsed
+      |> Enum.reject(&is_nil/1)
 
     attrs_for_changeset = %{
       "media" => embedded_recipe_params["media"],
@@ -205,6 +231,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
     changeset =
       EmbeddedRecipe.changeset(current_embedded_recipe, attrs_for_changeset)
       |> Map.put(:action, :validate)
+      |> IO.inspect(label: "Recipe Changeset Validation")
 
     {:noreply, assign_form(socket, changeset)}
   end
@@ -223,29 +250,28 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
     if is_nil(product_item_id) do
       {:noreply, put_flash(socket, :error, "Invalid Product Item ID. Please select a product.") |> assign_form(socket.assigns.form.source)}
     else
-      # Build recipe structures for each material item
       recipes_data =
         material_items_map
         |> Map.values()
         |> Enum.map(fn material_param ->
           material_item_id_str = material_param["id"]
-          case Integer.parse(material_item_id_str) do
-            {mat_id, ""} ->
+          amount_str = material_param["material_amount"]
+
+          case {Integer.parse(material_item_id_str), Integer.parse(amount_str)} do
+            {{mat_id, ""}, {amount, ""}} ->
               %{
                 "media" => media,
                 "product_item_id" => product_item_id,
-                "material_item_id" => mat_id
+                "material_item_id" => mat_id,
+                "material_amount" => amount
               }
             _ -> nil
           end
         end)
         |> Enum.reject(&is_nil/1)
 
-      # Start a multi for transactional delete and insert
       multi = Ecto.Multi.new()
 
-      # Delete all existing recipes using the original product_item_id and media
-      # This ensures we delete the correct existing recipes even if the user changed the product or media
       original_product_item_id = socket.assigns.original_product_item_id
       original_media = socket.assigns.original_media
 
@@ -257,7 +283,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
         else
           multi
         end
-      # Insert all new recipes
+
       multi_with_creates =
         Enum.reduce(recipes_data, multi, fn data, acc_multi ->
           changeset = GersangDb.Domain.Recipe.changeset(%GersangDb.Domain.Recipe{}, data)
@@ -323,7 +349,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
 
     existing_material_items = Ecto.Changeset.get_field(form.source, :material_items) || []
 
-    updated_material_items = existing_material_items ++ [%GersangItemDomain{}]
+    updated_material_items = existing_material_items ++ [%{material_amount: 5}]
 
     changeset =
       Ecto.Changeset.put_embed(form.source, :material_items, updated_material_items)
