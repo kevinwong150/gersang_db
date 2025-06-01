@@ -12,39 +12,7 @@ defmodule GersangDbWeb.RecipeLive.Index do
 
     recipes = Recipes.list_recipes()
 
-    # Group recipes by product, then by media, and aggregate material items
-    grouped_recipes =
-      recipes
-      |> Enum.group_by(& &1.product_item)
-      |> Enum.map(fn {product, product_recipes} ->
-        # Get all unique materials for this product across all media
-        all_materials_with_amounts =
-          product_recipes
-          |> Enum.map(fn recipe ->
-            %{item: recipe.material_item, amount: recipe.material_amount}
-          end)
-          # Note: If a material appears in multiple recipes for the same product (e.g. different media),
-          # this will list it multiple times. The cost calculation should handle this correctly if needed,
-          # or the logic here might need adjustment based on desired behavior for "all_materials" cost.
-
-        # Calculate total cost and summation display using materials with their amounts
-        {total_cost, cost_breakdown} = calculate_product_cost(all_materials_with_amounts)
-
-        by_media =
-          product_recipes
-          |> Enum.group_by(& &1.media)
-          |> Enum.map(fn {media, media_recipes} ->
-            material_items_with_amounts =
-              media_recipes
-              |> Enum.map(fn recipe ->
-                %{item: recipe.material_item, amount: recipe.material_amount, market_price: recipe.material_item.market_price, name: recipe.material_item.name}
-              end)
-              |> Enum.uniq_by(& &1.item.id)
-              |> Enum.sort_by(& &1.item.name)
-            %{media: media, materials: material_items_with_amounts}
-          end)
-        %{product: product, by_media: by_media, total_cost: total_cost, cost_breakdown: cost_breakdown}
-      end)
+    grouped_recipes = build_grouped_recipe(recipes)
 
     socket =
       socket
@@ -133,19 +101,70 @@ defmodule GersangDbWeb.RecipeLive.Index do
   end
 
   # Helper function to format abbreviated numbers for large values
-  defp format_abbreviated_number(number) when number >= 1_000_000_000 do
+  def format_abbreviated_number(number) when number >= 1_000_000_000 do
     abbreviated = number / 1_000_000_000
     formatted = :erlang.float_to_binary(abbreviated, decimals: 3)
     trimmed = String.replace(formatted, ~r/\.?0+$/, "")
     trimmed <> "B"
   end
 
-  defp format_abbreviated_number(number) when number >= 1_000_000 do
+  def format_abbreviated_number(number) when number >= 1_000_000 do
     abbreviated = number / 1_000_000
     formatted = :erlang.float_to_binary(abbreviated, decimals: 3)
     trimmed = String.replace(formatted, ~r/\.?0+$/, "")
     trimmed <> "M"
   end
 
-  defp format_abbreviated_number(_number), do: nil
+  def format_abbreviated_number(_number), do: nil
+
+  def build_grouped_recipe(recipes, product_id \\ nil) do
+    recipes
+    |> Enum.group_by(& &1.product_item)
+    |> Enum.map(fn {product, product_recipes} ->
+      all_materials_with_amounts_for_product =
+        product_recipes
+        |> Enum.map(fn recipe ->
+          %{item: recipe.material_item, amount: recipe.material_amount}
+        end)
+
+      {total_cost, cost_breakdown} = calculate_product_cost(all_materials_with_amounts_for_product)
+
+      by_media =
+        product_recipes
+        |> Enum.group_by(& &1.media)
+        |> Enum.map(fn {media, media_recipes} ->
+          materials_with_amounts_for_media =
+            media_recipes
+            |> Enum.map(fn recipe ->
+              %{item: recipe.material_item, amount: recipe.material_amount}
+            end)
+            |> Enum.uniq_by(fn material_info -> material_info.item.id end)
+            |> Enum.sort_by(fn material_info -> material_info.item.name end)
+
+          %{media: media, materials: materials_with_amounts_for_media}
+        end)
+        |> Enum.sort_by(& &1.media)
+
+      %{
+        product: product,
+        by_media: by_media,
+        total_cost: total_cost,
+        cost_breakdown: cost_breakdown
+      }
+    end)
+    |> then(fn grouped_recipes ->
+      if not is_nil(product_id) do
+        grouped_recipes
+        |> Enum.find(fn item ->
+          if not is_nil(product_id) do
+            item.product.id == product_id
+          else
+            true
+          end
+        end)
+      else
+        grouped_recipes
+      end
+    end)
+  end
 end
