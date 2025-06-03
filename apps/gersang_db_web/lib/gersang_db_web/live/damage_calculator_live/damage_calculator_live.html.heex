@@ -1,0 +1,156 @@
+<div class="damage-calculator">
+  <.header>
+    Damage Calculator
+    <:subtitle>Calculate damage values based on attribute differences</:subtitle>
+  </.header>
+
+  <div class="mt-8 space-y-6">
+    <div class="bg-gray-50 p-6 rounded-lg">
+      <h2 class="text-lg font-semibold mb-4">Damage Calculation Tool</h2>
+      
+      <form phx-change="calculate">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <h3 class="font-medium">Input Parameters</h3>
+            <div class="space-y-3">              
+              <div>
+                <label class="block text-sm font-medium text-gray-700">我方屬性值 (Your ELA)</label>                <input 
+                  type="number" 
+                  name="my_current_ela" 
+                  value={@my_current_ela}
+                  step="1"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Enter your ELA"
+                />
+              </div>            
+              <div>
+                <label class="block text-sm font-medium text-gray-700">對方屬性值 (Opponent ELA)</label>                <input 
+                  type="number" 
+                  name="opponent_ela" 
+                  value={@opponent_ela}
+                  step="1"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Enter opponent ELA"
+                />
+              </div>                <div>
+                <label class="block text-sm font-medium text-gray-700">目前傷害值 (Current Damage Value)</label>
+                <input 
+                  type="number" 
+                  name="current_damage_value" 
+                  value={@current_damage_value}
+                  step="1"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Enter current damage value"
+                />
+              </div>
+            </div>
+            
+            <!-- Weapon Enchantment Improvement Section -->
+            <div class="mt-6 pt-4 border-t border-gray-200">
+              <h4 class="font-medium text-gray-800 mb-3">Weapon Enchantment Improvement</h4>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">我方屬性值增幅 (Your ELA Buff)</label>                  <input 
+                    type="number" 
+                    name="my_new_ela_buff" 
+                    value={@my_new_ela_buff}
+                    step="1"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Enter your new ELA"
+                  />
+                </div>  
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">傷害增幅 (Damage Buff %)</label>                  <input 
+                    type="number" 
+                    name="damage_buff" 
+                    value={@damage_buff}
+                    step="0.01"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Enter damage buff percentage"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="space-y-4">
+            <h3 class="font-medium">Calculation Results</h3>
+            <div class="bg-white p-4 rounded border">
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-700">原始傷害 (Original Damage):</span>
+                  <span class="text-sm font-bold text-blue-600"><%= @results.original_damage %>%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-700">傷害減少率 (Damage Reduction Rate):</span>
+                  <span class="text-sm font-bold text-red-600"><%= @results.damage_reduction_rate %>%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-700">有效傷害 (Effective Damage):</span>
+                  <span class="text-sm font-bold text-green-600"><%= @results.effective_damage %>%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-700">有效傷害比率 (Effective Damage Ratio):</span>
+                  <span class="text-sm font-bold text-purple-600"><%= @results.effective_damage_ratio %>%</span>
+                </div>                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-700">新的傷害增幅 (New Damage Amplification):</span>
+                  <span class="text-sm font-bold text-orange-600"><%= @results.new_damage_amplification %>%</span>
+                </div>                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-700">原始傷害值 (Original Damage Value):</span>
+                  <span class="text-sm font-bold text-cyan-600"><%= @results.original_damage_value %></span>
+                </div>
+                  <!-- Enhancement Results Section -->
+                <div class="pt-3 mt-3 border-t border-gray-200">
+                  <h5 class="text-sm font-semibold text-gray-800 mb-2">Enhancement Results</h5>
+                    <!-- New Attribute Enhancement -->
+                  <div class="mb-3">
+                    <h6 class="text-xs font-medium text-gray-600 mb-1">ELA Enhancement</h6>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-medium text-gray-700">新傷害值 (New Damage Value):</span>
+                      <span class="text-sm font-bold text-emerald-600">
+                        <%= if @my_new_ela_buff && @my_new_ela_buff != 0 do %>
+                          <%= @results.new_damage_value_with_new_ela %>
+                        <% else %>
+                          N/A
+                        <% end %>
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- Damage Buff Enhancement -->
+                  <div>
+                    <h6 class="text-xs font-medium text-gray-600 mb-1">Damage Buff Enhancement</h6>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-medium text-gray-700">新傷害值(含增幅) (New Damage Value with Buff):</span>
+                      <span class="text-sm font-bold text-indigo-600">
+                        <%= if @damage_buff && @damage_buff != 0 do %>
+                          <%= @results.new_damage_value_with_buff %>
+                        <% else %>
+                          N/A
+                        <% end %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    
+    <div class="bg-blue-50 p-6 rounded-lg">
+      <h2 class="text-lg font-semibold mb-4">About the Calculation</h2>
+      <p class="text-gray-700 mb-2">
+        This calculator uses the attribute damage formula to compute various damage metrics:
+      </p>
+      <ul class="text-sm text-gray-600 space-y-1">
+        <li>• <strong>原始傷害:</strong> 100% + 我方屬性值</li>
+        <li>• <strong>傷害減少率:</strong> 屬性相差 / 2 </li>
+        <li>• <strong>有效傷害:</strong> 原始傷害 - 傷害減少率</li>
+        <li>• <strong>有效傷害比率:</strong> 100% + (有效傷害 - 原始傷害) / 原始傷害</li>
+        <li>• <strong>新的傷害增幅:</strong> (88.71% - 86.66%) / 86.88%</li>
+      </ul>
+    </div>
+  </div>
+</div>

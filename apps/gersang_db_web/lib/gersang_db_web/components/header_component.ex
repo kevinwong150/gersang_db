@@ -27,6 +27,14 @@ defmodule GersangDbWeb.HeaderComponent do
                 Recipes
               </.link>
             </li>
+            <li>
+              <.link
+                href={~p"/gersang/damage_calculator"}
+                class="text-theme-secondary-light hover:text-theme-secondary-light"
+              >
+                Damage Calculator
+              </.link>
+            </li>
           </ul>
         </nav>
       </div>
