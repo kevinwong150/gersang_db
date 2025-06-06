@@ -141,22 +141,6 @@ ALTER TABLE ONLY public.recipes ALTER COLUMN id SET DEFAULT nextval('public.reci
 --
 
 COPY public.gersang_items (id, name, tags, margin, market_price, cost_per, "artisan_product?", artisan_production_amount, artisan_production_fee, inserted_at, updated_at) FROM stdin;
-22	Green Force Stone	\N	\N	0	\N	f	\N	\N	2025-05-31 18:21:33	2025-05-31 18:21:33
-23	Yellow Force Stone	\N	\N	0	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-24	Red Force Stone	\N	\N	0	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-25	Blue Force Stone	\N	\N	0	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-26	Moon Seal	\N	\N	2000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-27	Sun Seal	\N	\N	1000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-28	Piece of Deities(Thunder)	\N	\N	850000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-29	Piece of Deities(Earth)	\N	\N	890000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-30	Piece of Deities(Wind)	\N	\N	1400000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-31	Piece of Deities(Water)	\N	\N	1980000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-32	Piece of Deities(Flame)	\N	\N	3000000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-33	Small Elemental Stone of Flame	\N	\N	940000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-34	Small Elemental Stone of Water	\N	\N	850000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-35	Small Elemental Stone of Wind	\N	\N	790000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-36	Small Elemental Stone of Thunder	\N	\N	850000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
-37	Small Elemental Stone of Earth	\N	\N	8500000	\N	f	\N	\N	2025-05-31 18:21:34	2025-05-31 18:21:34
 \.
 
 
@@ -182,7 +166,7 @@ COPY public.schema_migrations (version, inserted_at) FROM stdin;
 -- Name: gersang_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: gersang_db
 --
 
-SELECT pg_catalog.setval('public.gersang_items_id_seq', 37, true);
+SELECT pg_catalog.setval('public.gersang_items_id_seq', 53, true);
 
 
 --

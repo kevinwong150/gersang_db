@@ -1,10 +1,9 @@
 defmodule GersangDbWeb.HeaderComponent do
   use Phoenix.Component
   use Phoenix.VerifiedRoutes, router: GersangDbWeb.Router, endpoint: GersangDbWeb.Endpoint
-
   def header_component(assigns) do
     ~H"""
-    <header class="bg-theme-primary-light text-theme-secondary-light p-4">
+    <header class="w-full bg-theme-primary-light text-theme-secondary-light p-4 sticky top-0 z-50">
       <div class="container mx-auto flex justify-between items-center">
         <h1 class="text-3xl font-bold">
           <.link href={~p"/gersang"}>Gersang DB</.link>
