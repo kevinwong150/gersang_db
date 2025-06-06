@@ -1,4 +1,4 @@
-<div class="damage-calculator">
+<div class="damage-calculator w-7xl px-4 sm:px-6 lg:px-8">
   <.header>
     Damage Calculator
     <:subtitle>Calculate damage values based on attribute differences</:subtitle>
@@ -64,7 +64,7 @@
                     type="number" 
                     name="damage_buff" 
                     value={@damage_buff}
-                    step="0.01"
+                    step="1"
                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     placeholder="Enter damage buff percentage"
                   />
@@ -72,65 +72,80 @@
               </div>
             </div>
           </div>
-          
-          <div class="space-y-4">
-            <h3 class="font-medium">Calculation Results</h3>
-            <div class="bg-white p-4 rounded border">
+            <div class="space-y-6">
+            <h3 class="font-semibold text-lg text-gray-800">Calculation Results</h3>
+              <!-- Base Calculations -->
+            <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+              <h4 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">Base Calculations</h4>
               <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-medium text-gray-700">原始傷害 (Original Damage):</span>
-                  <span class="text-sm font-bold text-blue-600"><%= @results.original_damage %>%</span>
+                <div class="flex justify-between items-center py-2">
+                  <span class="font-medium text-gray-700">原始傷害 (Original Damage)</span>
+                  <span class="text-lg font-bold text-blue-600"><%= @results.original_damage %>%</span>
                 </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-medium text-gray-700">傷害減少率 (Damage Reduction Rate):</span>
-                  <span class="text-sm font-bold text-red-600"><%= @results.damage_reduction_rate %>%</span>
+                <div class="flex justify-between items-center py-2">
+                  <span class="font-medium text-gray-700">傷害減少率 (Damage Reduction Rate)</span>
+                  <span class="text-lg font-bold text-red-600"><%= @results.damage_reduction_rate %>%</span>
                 </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-medium text-gray-700">有效傷害 (Effective Damage):</span>
-                  <span class="text-sm font-bold text-green-600"><%= @results.effective_damage %>%</span>
+                <div class="flex justify-between items-center py-2">
+                  <span class="font-medium text-gray-700">有效傷害 (Effective Damage)</span>
+                  <span class="text-lg font-bold text-green-600"><%= @results.effective_damage %>%</span>
                 </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-medium text-gray-700">有效傷害比率 (Effective Damage Ratio):</span>
-                  <span class="text-sm font-bold text-purple-600"><%= @results.effective_damage_ratio %>%</span>
-                </div>                <div class="flex justify-between items-center">
-                  <span class="text-sm font-medium text-gray-700">新的傷害增幅 (New Damage Amplification):</span>
-                  <span class="text-sm font-bold text-orange-600"><%= @results.new_damage_amplification %>%</span>
-                </div>                <div class="flex justify-between items-center">
-                  <span class="text-sm font-medium text-gray-700">原始傷害值 (Original Damage Value):</span>
-                  <span class="text-sm font-bold text-cyan-600"><%= @results.original_damage_value %></span>
+                <div class="flex justify-between items-center py-2">
+                  <span class="font-medium text-gray-700">有效傷害比率 (Effective Damage Ratio)</span>
+                  <span class="text-lg font-bold text-purple-600"><%= @results.effective_damage_ratio %>%</span>
                 </div>
-                  <!-- Enhancement Results Section -->
-                <div class="pt-3 mt-3 border-t border-gray-200">
-                  <h5 class="text-sm font-semibold text-gray-800 mb-2">Enhancement Results</h5>
-                    <!-- New Attribute Enhancement -->
-                  <div class="mb-3">
-                    <h6 class="text-xs font-medium text-gray-600 mb-1">ELA Enhancement</h6>
-                    <div class="flex justify-between items-center">
-                      <span class="text-sm font-medium text-gray-700">新傷害值 (New Damage Value):</span>
-                      <span class="text-sm font-bold text-emerald-600">
-                        <%= if @my_new_ela_buff && @my_new_ela_buff != 0 do %>
-                          <%= @results.new_damage_value_with_new_ela %>
-                        <% else %>
-                          N/A
-                        <% end %>
-                      </span>
-                    </div>
+                <div class="flex justify-between items-center py-2">
+                  <span class="font-medium text-gray-700">原始傷害值 (Original Damage Value)</span>
+                  <span class="text-lg font-bold text-cyan-600"><%= @results.original_damage_value %></span>
+                </div>
+              </div>
+            </div>
+            <!-- Enhancement Results Section -->
+            <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+              <h4 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">Enhancement Results</h4>
+                <!-- ELA Enhancement -->
+              <div class="mb-6">
+                <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                  <span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                  ELA Enhancement
+                </h5>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center py-2">
+                    <span class="font-medium text-gray-700">新的有效傷害比率 (New Effective Damage Ratio)</span>
+                    <span class="text-lg font-bold text-orange-600"><%= @results.new_effective_damage_ratio %>%</span>
+                  </div> 
+                  <div class="flex justify-between items-center py-2">
+                    <span class="font-medium text-gray-700">傷害增幅 (Damage Amplification)</span>
+                    <span class="text-lg font-bold text-amber-600"><%= @results.damage_amplification %>%</span>
+                  </div> 
+                  <div class="flex justify-between items-center py-2">
+                    <span class="font-medium text-gray-700">新傷害值 (New Damage Value)</span>
+                    <span class="text-lg font-bold text-emerald-600">
+                      <%= if @my_new_ela_buff && @my_new_ela_buff != 0 do %>
+                        <%= @results.new_damage_value_with_new_ela %>
+                      <% else %>
+                        <span class="text-gray-400">N/A</span>
+                      <% end %>
+                    </span>
                   </div>
-                  
-                  <!-- Damage Buff Enhancement -->
-                  <div>
-                    <h6 class="text-xs font-medium text-gray-600 mb-1">Damage Buff Enhancement</h6>
-                    <div class="flex justify-between items-center">
-                      <span class="text-sm font-medium text-gray-700">新傷害值(含增幅) (New Damage Value with Buff):</span>
-                      <span class="text-sm font-bold text-indigo-600">
-                        <%= if @damage_buff && @damage_buff != 0 do %>
-                          <%= @results.new_damage_value_with_buff %>
-                        <% else %>
-                          N/A
-                        <% end %>
-                      </span>
-                    </div>
-                  </div>
+                </div>
+              </div>
+              
+              <!-- Damage Buff Enhancement -->
+              <div>
+                <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                  <span class="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
+                  Damage Buff Enhancement
+                </h5>
+                <div class="flex justify-between items-center py-2">
+                  <span class="font-medium text-gray-700">新傷害值(含增幅) (New Damage Value with Buff)</span>
+                  <span class="text-lg font-bold text-indigo-600">
+                    <%= if @damage_buff && @damage_buff != 0 do %>
+                      <%= @results.new_damage_value_with_buff %>
+                    <% else %>
+                      <span class="text-gray-400">N/A</span>
+                    <% end %>
+                  </span>
                 </div>
               </div>
             </div>
@@ -138,7 +153,7 @@
         </div>
       </form>
     </div>
-    
+
     <div class="bg-blue-50 p-6 rounded-lg">
       <h2 class="text-lg font-semibold mb-4">About the Calculation</h2>
       <p class="text-gray-700 mb-2">
@@ -151,6 +166,24 @@
         <li>• <strong>有效傷害比率:</strong> 100% + (有效傷害 - 原始傷害) / 原始傷害</li>
         <li>• <strong>新的傷害增幅:</strong> (88.71% - 86.66%) / 86.88%</li>
       </ul>
+    </div>    <div class="bg-yellow-50 p-6 rounded-lg">
+      <h2 class="text-lg font-semibold mb-4">Quotes & Tips</h2>
+      <div class="space-y-3">
+        <blockquote class="bg-white p-4 rounded-lg border-l-4 border-yellow-400">
+          <p class="text-gray-700 italic">"你同隻怪嘅ELA差距越大 加個5ELA嘅效果就越大"</p>
+          <footer class="text-sm text-gray-500 mt-2">— 魚強</footer>
+        </blockquote>
+        
+        <blockquote class="bg-white p-4 rounded-lg border-l-4 border-yellow-400">
+          <p class="text-gray-700 italic">"依加入戰應該得106左右 打90屬多5ELA會無咩分別 但係打300屬會有"</p>
+          <footer class="text-sm text-gray-500 mt-2">— 魚強</footer>
+        </blockquote>
+        
+        <blockquote class="bg-white p-4 rounded-lg border-l-4 border-yellow-400">
+          <p class="text-gray-700 italic">"當時有試過5ELA同5爆 雖然數據上係5ELA好啲 但係打02/非剋屬嘅野 5爆會有少少優勢"</p>
+          <footer class="text-sm text-gray-500 mt-2">— 魚強</footer>
+        </blockquote>
+      </div>
     </div>
   </div>
 </div>

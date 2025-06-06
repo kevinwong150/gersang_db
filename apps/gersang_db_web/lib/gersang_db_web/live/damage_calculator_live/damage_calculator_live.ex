@@ -16,7 +16,8 @@ defmodule GersangDbWeb.DamageCalculatorLive do
         damage_reduction_rate: 0.0,
         effective_damage: 100.0,
         effective_damage_ratio: 100.0,
-        new_damage_amplification: 0.0,
+        new_effective_damage_ratio: 0.0,
+        damage_amplification: 0.0,
         original_damage_value: 0.0,
         new_damage_value_with_new_ela: 0.0,
         new_damage_value_with_buff: 0.0
@@ -92,7 +93,7 @@ defmodule GersangDbWeb.DamageCalculatorLive do
     original_damage = 100.0 + my_current_ela
 
     # 傷害減少率
-    damage_reduction_rate = abs(opponent_ela - my_current_ela) / 2.0
+    damage_reduction_rate = min(90.0, abs(opponent_ela - my_current_ela) / 2.0)
 
     # 有效傷害
     effective_damage = original_damage - damage_reduction_rate
@@ -102,9 +103,11 @@ defmodule GersangDbWeb.DamageCalculatorLive do
 
     my_new_ela = my_new_ela_buff + my_current_ela
 
-    # 新的傷害增幅: This seems to be a comparison calculation
+    # 新的有效傷害比率: This seems to be a comparison calculation
     # For now, calculate the difference from base 100%
-    new_damage_amplification = effective_damage_ratio(my_new_ela, opponent_ela)
+    new_effective_damage_ratio = effective_damage_ratio(my_new_ela, opponent_ela)
+
+    damage_amplification = ((new_effective_damage_ratio - effective_damage_ratio) / effective_damage_ratio)  * 100.0
 
     # Avoid division by zero or very small numbers
     original_damage_value =
@@ -115,21 +118,22 @@ defmodule GersangDbWeb.DamageCalculatorLive do
       end
 
     new_damage_value_with_new_ela =
-      if new_damage_amplification != 0 and original_damage_value != 0 do
-        original_damage_value * (new_damage_amplification / 100.0)
+      if new_effective_damage_ratio != 0 and original_damage_value != 0 do
+        original_damage_value * (new_effective_damage_ratio / 100.0)
       else
         0.0
       end
 
     new_damage_value_with_buff =
-      original_damage_value * ((100.0 + damage_buff) / 100.0) * (effective_damage_ratio / 100.0)
+      current_damage_value * ((100.0 + damage_buff) / 100.0)
 
     %{
       original_damage: format_number(original_damage),
       damage_reduction_rate: format_number(damage_reduction_rate),
       effective_damage: format_number(effective_damage),
       effective_damage_ratio: format_number(effective_damage_ratio),
-      new_damage_amplification: format_number(new_damage_amplification),
+      new_effective_damage_ratio: format_number(new_effective_damage_ratio),
+      damage_amplification: format_number(damage_amplification),
       original_damage_value: format_number(original_damage_value),
       new_damage_value_with_new_ela: format_number(new_damage_value_with_new_ela),
       new_damage_value_with_buff: format_number(new_damage_value_with_buff)
@@ -155,9 +159,14 @@ defmodule GersangDbWeb.DamageCalculatorLive do
 
   defp format_number(num), do: format_number(num * 1.0)
 
+  def effective_damage_ratio(my_current_ela, opponent_ela) when my_current_ela >= opponent_ela do
+    effective_damage_ratio = 100 + my_current_ela
+    effective_damage_ratio
+  end
+
   def effective_damage_ratio(my_current_ela, opponent_ela) do
     original_damage = 100.0 + my_current_ela
-    damage_reduction_rate = abs(opponent_ela - my_current_ela) / 2.0
+    damage_reduction_rate = max(0.0, abs(opponent_ela - my_current_ela) / 2.0)
     effective_damage = original_damage - damage_reduction_rate
 
     # 有效傷害比率
