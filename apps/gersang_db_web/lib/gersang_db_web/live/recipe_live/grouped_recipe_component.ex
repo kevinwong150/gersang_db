@@ -3,6 +3,7 @@ defmodule GersangDbWeb.RecipeLive.GroupedRecipeComponent do
 
   alias GersangDbWeb.Router.Helpers, as: Routes
   alias GersangDb.Recipes
+  alias GersangDb.RecipeSpecs
   alias GersangDbWeb.Utils.ViewHelpers
 
   @impl true
@@ -23,25 +24,22 @@ defmodule GersangDbWeb.RecipeLive.GroupedRecipeComponent do
             <%= @grouped_recipe.cost_breakdown %>
           </div>
         </div>
-      </div>
-
-      <div class="space-y-4">
+      </div>      <div class="space-y-4">
       <%= for %{media: media, materials: materials} <- @grouped_recipe.by_media do %>
+        <% recipe_spec = RecipeSpecs.get_recipe_spec_by_product_and_media(@grouped_recipe.product.id, media) %>
           <div class="relative border-l-4 border-blue-400 pl-4 py-6 bg-blue-50 rounded mb-2">
-            <div class="absolute top-2 right-2 flex gap-2">
-              <.link :if={@source == :index} navigate={~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{media}"} class="rounded-full bg-green-200 hover:bg-green-400 p-2 transition-colors" title="Show">
+            <div class="absolute top-2 right-2 flex gap-2">              <.link :if={@source == :index && recipe_spec} navigate={~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{recipe_spec.id}"} class="rounded-full bg-green-200 hover:bg-green-400 p-2 transition-colors" title="Show">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-700">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                 </svg>
               </.link>
-              <.link patch={~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{media}/edit"} class="rounded-full bg-blue-200 hover:bg-blue-400 p-2 transition-colors" title="Edit">
+              <.link :if={recipe_spec} patch={~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{recipe_spec.id}/edit"} class="rounded-full bg-blue-200 hover:bg-blue-400 p-2 transition-colors" title="Edit">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-700">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L7.5 19.79l-4 1 1-4 14.362-14.303z" />
                 </svg>
-              </.link>
-              <.link
-                phx-click={JS.push("delete", value: %{product_id: @grouped_recipe.product.id, media: media}, target: @myself)}
+              </.link>              <.link :if={recipe_spec}
+                phx-click={JS.push("delete", value: %{product_id: @grouped_recipe.product.id, recipe_spec_id: recipe_spec.id}, target: @myself)}
                 data-confirm="Are you sure?"
                 class="rounded-full bg-red-200 hover:bg-red-400 p-2 transition-colors"
                 title="Delete"
@@ -85,17 +83,17 @@ defmodule GersangDbWeb.RecipeLive.GroupedRecipeComponent do
     </div>
     """
   end
-
   @impl true
-  def handle_event("delete", %{"product_id" => product_id, "media" => media}, socket) do
+  def handle_event("delete", %{"product_id" => product_id, "recipe_spec_id" => recipe_spec_id}, socket) do
     product_id_int = if is_binary(product_id), do: String.to_integer(product_id), else: product_id
+    recipe_spec_id_int = if is_binary(recipe_spec_id), do: String.to_integer(recipe_spec_id), else: recipe_spec_id
 
     import Ecto.Query
     alias GersangDb.Domain.Recipe
     alias GersangDb.Repo
 
-    # Construct the query to delete recipes matching product_id and media
-    query = from(r in Recipe, where: r.product_item_id == ^product_id_int and r.media == ^media)
+    # Construct the query to delete recipes matching product_id and recipe_spec_id
+    query = from(r in Recipe, where: r.product_item_id == ^product_id_int and r.recipe_spec_id == ^recipe_spec_id_int)
 
     case Repo.delete_all(query) do
       {_count, _nil} -> # Successful deletion, delete_all returns {count, nil}

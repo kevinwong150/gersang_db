@@ -28,11 +28,8 @@ defmodule GersangDbWeb.Router do
 
     live "/gersang/recipes", RecipeLive.Index, :index
     live "/gersang/recipes/new", RecipeLive.Index, :new
-    live "/gersang/recipes/:product_id/:media/edit", RecipeLive.Index, :edit
-    live "/gersang/recipes/:product_id/:media", RecipeLive.Show, :show
-    # removed old id-based routes for show/edit
-    # live "/gersang/recipes/:id/edit", RecipeLive.Index, :edit
-    # live "/gersang/recipes/:id", RecipeLive.Show, :show
+    live "/gersang/recipes/:product_id/:recipe_spec_id/edit", RecipeLive.Index, :edit
+    live "/gersang/recipes/:product_id/:recipe_spec_id", RecipeLive.Show, :show
 
     live "/gersang/recipe_specs", RecipeSpecLive.Index, :index
     live "/gersang/recipe_specs/new", RecipeSpecLive.Index, :new

@@ -1,8 +1,10 @@
 defmodule GersangDbWeb.RecipeLive.Index do
   use GersangDbWeb, :live_view
 
+  alias GersangDb.Repo
   alias GersangDbWeb.Utils.ViewHelpers
   alias GersangDb.Gersang.Recipes
+  alias GersangDb.RecipeSpecs
   alias GersangDb.Domain.Recipe
   alias GersangDb.GersangItem
 
@@ -10,7 +12,9 @@ defmodule GersangDbWeb.RecipeLive.Index do
   def mount(_params, _session, socket) do
     gersang_item_options = Enum.map(GersangItem.list_items(), fn item -> {item.name, item.id} end)
 
-    recipes = Recipes.list_recipes()
+    recipes =
+      Recipes.list_recipes()
+      |> Repo.preload([:product_item, :recipe_spec])
 
     grouped_recipes = build_grouped_recipe(recipes)
 
@@ -22,17 +26,17 @@ defmodule GersangDbWeb.RecipeLive.Index do
 
     {:ok, socket}
   end
-
   @impl true
   def handle_params(params, _url, socket) do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
-
-  defp apply_action(socket, :edit, %{"product_id" => product_id, "media" => media}) do
-    recipes = Recipes.list_recipes_by_product_and_media(product_id, media)
+  defp apply_action(socket, :edit, %{"product_id" => product_id, "recipe_spec_id" => recipe_spec_id}) do
+    recipe_spec = GersangDb.RecipeSpecs.get_recipe_spec!(recipe_spec_id)
+    recipes = Recipes.list_recipes_by_product_and_recipe_spec(product_id, recipe_spec_id)
     socket
     |> assign(:page_title, "Edit Recipe")
     |> assign(:gersang_recipes, recipes)
+    |> assign(:recipe_spec, recipe_spec)
   end
 
   defp apply_action(socket, :new, _params) do
@@ -40,25 +44,24 @@ defmodule GersangDbWeb.RecipeLive.Index do
     |> assign(:page_title, "New Recipe")
     |> assign(:gersang_recipes, [])
   end
-
   defp apply_action(socket, :index, _params) do
     socket
     |> assign(:page_title, "Listing Recipes")
     |> assign(:gersang_recipe, nil)
   end
-
   @impl true
-  def handle_event("delete", %{"product_id" => product_id, "media" => media}, socket) do
-    # Delete all recipes with the given product_id and media
+  def handle_event("delete", %{"product_id" => product_id, "recipe_spec_id" => recipe_spec_id}, socket) do
+    # Delete all recipes with the given product_id and recipe_spec_id
     import Ecto.Query
-    from(r in Recipe, where: r.product_item_id == ^product_id and r.media == ^media)
+    from(r in Recipe, where: r.product_item_id == ^product_id and r.recipe_spec_id == ^recipe_spec_id)
     |> GersangDb.Repo.delete_all()
+
     # Remove all from the stream
     updated_stream =
       Enum.reject(
         socket.assigns.streams.gersang_recipes[:entries],
         fn r ->
-          to_string(r.product_item_id) == to_string(product_id) and r.media == media
+          to_string(r.product_item_id) == to_string(product_id) and to_string(r.recipe_spec_id) == to_string(recipe_spec_id)
         end
       )
     {:noreply, stream(socket, :gersang_recipes, updated_stream)}
@@ -116,7 +119,6 @@ defmodule GersangDbWeb.RecipeLive.Index do
   end
 
   def format_abbreviated_number(_number), do: nil
-
   def build_grouped_recipe(recipes, product_id \\ nil) do
     recipes
     |> Enum.group_by(& &1.product_item)
@@ -131,7 +133,7 @@ defmodule GersangDbWeb.RecipeLive.Index do
 
       by_media =
         product_recipes
-        |> Enum.group_by(& &1.media)
+        |> Enum.group_by(& &1.recipe_spec.media)
         |> Enum.map(fn {media, media_recipes} ->
           materials_with_amounts_for_media =
             media_recipes

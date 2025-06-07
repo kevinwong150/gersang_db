@@ -100,4 +100,40 @@ defmodule GersangDb.RecipeSpecs do
   def change_recipe_spec(%RecipeSpec{} = recipe_spec, attrs \\ %{}) do
     RecipeSpec.changeset(recipe_spec, attrs)
   end
+
+  @doc """
+  Gets a recipe_spec by product_item_id and media.
+
+  Returns nil if no recipe spec is found.
+
+  ## Examples
+
+      iex> get_recipe_spec_by_product_and_media(123, "Blacksmith")
+      %RecipeSpec{}
+
+      iex> get_recipe_spec_by_product_and_media(456, "Blacksmith")
+      nil
+
+  """
+  def get_recipe_spec_by_product_and_media(product_item_id, media) do
+    Repo.one(from r in RecipeSpec, where: r.product_item_id == ^product_item_id and r.media == ^media, preload: [:product_item])
+  end
+
+  @doc """
+  Gets a recipe_spec by product_item_id and media.
+
+  Raises `Ecto.NoResultsError` if the Recipe spec does not exist.
+
+  ## Examples
+
+      iex> get_recipe_spec_by_product_and_media!(123, "Blacksmith")
+      %RecipeSpec{}
+
+      iex> get_recipe_spec_by_product_and_media!(456, "Blacksmith")
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_recipe_spec_by_product_and_media!(product_item_id, media) do
+    Repo.one!(from r in RecipeSpec, where: r.product_item_id == ^product_item_id and r.media == ^media, preload: [:product_item])
+  end
 end

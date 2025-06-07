@@ -12,7 +12,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
 
     @primary_key false
     embedded_schema do
-      field :media, :string
+      field :recipe_spec_id, :integer
       embeds_one :product_item, GersangItem
       embeds_many :material_items, GersangItem do
         field :material_amount, :integer
@@ -22,7 +22,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
 
     def changeset(embedded_recipe, attrs) do
       embedded_recipe
-      |> cast(attrs, [:media, :product_item_id])
+      |> cast(attrs, [:recipe_spec_id, :product_item_id])
       |> cast_embed(:product_item, with: &GersangItemDomain.changeset/2, required: true)
       |> cast_embed(:material_items, with: fn item_struct, params_for_item ->
            # item_struct is a %GersangItem{} that also has a :material_amount field.
@@ -31,7 +31,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
            Ecto.Changeset.cast(item_struct, params_for_item, [:material_amount])
            |> Ecto.Changeset.validate_required([:material_amount])
          end, required: true)
-      |> validate_required([:media])
+      |> validate_required([:recipe_spec_id])
     end
   end
 
@@ -50,7 +50,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:media]} type="text" label="Media" />
+        <.input field={@form[:recipe_spec_id]} type="select" label="Recipe Spec" options={@recipe_spec_options} required />
         <.input field={@form[:product_item_id]} type="select" label="Product Item" options={@gersang_item_options} required />
 
         <.inputs_for :let={material_form} field={@form[:material_items]}>
@@ -92,10 +92,23 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
     all_gersang_items = GersangItem.list_items()
     gersang_item_options = Enum.map(all_gersang_items, fn item -> {item.name, item.id} end)
 
+    # Get all recipe specs with product item preloaded
+    all_recipe_specs = GersangDb.RecipeSpecs.list_recipe_specs()
+    recipe_spec_options = Enum.map(all_recipe_specs, fn recipe_spec ->
+      label = "#{recipe_spec.product_item.name} - #{recipe_spec.media}"
+      {label, recipe_spec.id}
+    end)
+
     initial_changeset_attrs =
       cond do
         (recipes_list = assigns[:gersang_recipes]) && is_list(recipes_list) && !Enum.empty?(recipes_list) ->
           first_recipe = List.first(recipes_list)
+
+          # Find the recipe_spec based on product_item_id and media
+          recipe_spec = GersangDb.RecipeSpecs.get_recipe_spec_by_product_and_media(
+            first_recipe.product_item_id,
+            first_recipe.recipe_spec.media
+          )
 
           product_item_struct =
             cond do
@@ -131,7 +144,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
             |> Enum.reject(&is_nil/1)
 
           %{
-            "media" => first_recipe.media,
+            "recipe_spec_id" => recipe_spec && recipe_spec.id,
             "product_item_id" => first_recipe.product_item_id,
             "product_item" => product_item_attrs,
             "material_items" => material_items_attrs_list
@@ -148,9 +161,9 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
         _ -> nil
       end
 
-    original_media =
+    original_recipe_spec_id =
       case initial_changeset_attrs do
-        %{"media" => media} when not is_nil(media) -> media
+        %{"recipe_spec_id" => id} when not is_nil(id) -> id
         _ -> nil
       end
 
@@ -159,8 +172,9 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
      |> assign(assigns)
      |> assign(:all_gersang_items, all_gersang_items)
      |> assign(:gersang_item_options, gersang_item_options)
+     |> assign(:recipe_spec_options, recipe_spec_options)
      |> assign(:original_product_item_id, original_product_item_id)
-     |> assign(:original_media, original_media)
+     |> assign(:original_recipe_spec_id, original_recipe_spec_id)
      |> assign_form(form_changeset)}
   end
 
@@ -222,7 +236,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
       |> Enum.reject(&is_nil/1)
 
     attrs_for_changeset = %{
-      "media" => embedded_recipe_params["media"],
+      "recipe_spec_id" => embedded_recipe_params["recipe_spec_id"],
       "product_item_id" => product_item_id_str,
       "product_item" => product_item_attrs,
       "material_items" => material_items_attrs_list
@@ -237,19 +251,30 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
   end
 
   def handle_event("save", %{"embedded_recipe" => recipe_params}, socket) do
-    media = recipe_params["media"]
+    recipe_spec_id_str = recipe_params["recipe_spec_id"]
     product_item_id_str = recipe_params["product_item_id"]
     material_items_map = recipe_params["material_items"] || %{}
 
-    product_item_id =
-      case Integer.parse(product_item_id_str) do
+    recipe_spec_id =
+      case Integer.parse(recipe_spec_id_str || "") do
         {id, ""} -> id
         _ -> nil
       end
 
-    if is_nil(product_item_id) do
-      {:noreply, put_flash(socket, :error, "Invalid Product Item ID. Please select a product.") |> assign_form(socket.assigns.form.source)}
+    product_item_id =
+      case Integer.parse(product_item_id_str || "") do
+        {id, ""} -> id
+        _ -> nil
+      end
+
+    if is_nil(recipe_spec_id) do
+      {:noreply, put_flash(socket, :error, "Invalid Recipe Spec ID. Please select a recipe spec.") |> assign_form(socket.assigns.form.source)}
     else
+      # Get the recipe_spec to find the media and product_item_id
+      recipe_spec = GersangDb.RecipeSpecs.get_recipe_spec!(recipe_spec_id)
+      media = recipe_spec.media
+      product_item_id = recipe_spec.product_item_id
+
       recipes_data =
         material_items_map
         |> Map.values()
@@ -260,7 +285,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
           case {Integer.parse(material_item_id_str), Integer.parse(amount_str)} do
             {{mat_id, ""}, {amount, ""}} ->
               %{
-                "media" => media,
+                "recipe_spec_id" => recipe_spec_id,
                 "product_item_id" => product_item_id,
                 "material_item_id" => mat_id,
                 "material_amount" => amount
@@ -273,10 +298,15 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
       multi = Ecto.Multi.new()
 
       original_product_item_id = socket.assigns.original_product_item_id
-      original_media = socket.assigns.original_media
+      original_recipe_spec_id = socket.assigns.original_recipe_spec_id
 
       multi =
-        if original_product_item_id && original_media do
+        if original_recipe_spec_id do
+          # Get the original recipe_spec to find the original media
+          original_recipe_spec = GersangDb.RecipeSpecs.get_recipe_spec!(original_recipe_spec_id)
+          original_media = original_recipe_spec.media
+          original_product_item_id = original_recipe_spec.product_item_id
+
           Ecto.Multi.delete_all(multi, :delete_existing,
             from(r in GersangDb.Domain.Recipe, where: r.product_item_id == ^original_product_item_id and r.media == ^original_media)
           )

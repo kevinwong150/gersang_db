@@ -1,7 +1,7 @@
 <.header>
   <%= @page_title %>
   <:actions>
-    <.link :if={@grouped_recipe} patch={~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{@grouped_recipe.by_media |> List.first() |> Map.get(:media)}/edit"} phx-click={JS.push_focus()}>
+    <.link :if={@grouped_recipe} patch={~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{@recipe_spec.id}/edit"} phx-click={JS.push_focus()}>
       <.button>Edit Recipe</.button>
     </.link>
   </:actions>
@@ -28,14 +28,14 @@
 
 <.back navigate={~p"/gersang/recipes"}>Back to recipes</.back>
 
-<.modal :if={@live_action == :edit && @grouped_recipe} id="recipe-modal" show on_cancel={JS.patch(~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{@grouped_recipe.by_media |> List.first() |> Map.get(:media)}")}>
+<.modal :if={@live_action == :edit && @grouped_recipe} id="recipe-modal" show on_cancel={JS.patch(~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{@recipe_spec.id}")}>
   <.live_component
     module={GersangDbWeb.RecipeLive.FormComponent}
     id={@grouped_recipe.product.id} # Assuming product ID is the main ID for the form context here
     title={@page_title}
     action={@live_action}
     gersang_recipes={Recipes.list_recipes_by_product_and_media(@grouped_recipe.product.id, @grouped_recipe.by_media |> List.first() |> Map.get(:media))}
-    patch={~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{@grouped_recipe.by_media |> List.first() |> Map.get(:media)}"}
+    patch={~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{@recipe_spec.id}"}
     gersang_item_options={@gersang_item_options} # Ensure this is assigned in show.ex
   />
 </.modal>

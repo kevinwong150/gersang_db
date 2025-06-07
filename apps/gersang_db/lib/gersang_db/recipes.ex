@@ -13,11 +13,11 @@ defmodule GersangDb.Gersang.Recipes do
   ## Examples
 
       iex> list_recipes()
-      [%Recipe{}, ...]
+    [%Recipe{}, ...]
 
   """
   def list_recipes do
-    Repo.all(from r in Recipe, preload: [:product_item, :material_item])
+    Repo.all(from r in Recipe, preload: [:product_item, :material_item, :recipe_spec])
   end
 
   @doc """
@@ -35,36 +35,35 @@ defmodule GersangDb.Gersang.Recipes do
 
   """
   def get_recipe!(id), do: Repo.get!(Recipe, id)
-
   @doc """
-  Gets a recipe by product_id and media.
+  Gets a recipe by product_id and recipe_spec_id.
 
   Raises `Ecto.NoResultsError` if the Recipe does not exist.
 
   ## Examples
 
-      iex> get_recipe_by_product_and_media!(123, "media")
+      iex> get_recipe_by_product_and_recipe_spec!(123, 456)
       %Recipe{}
 
-      iex> get_recipe_by_product_and_media!(456, "media")
+      iex> get_recipe_by_product_and_recipe_spec!(123, 789)
       ** (Ecto.NoResultsError)
 
   """
-  def get_recipe_by_product_and_media!(product_id, media) do
-    Repo.one!(from r in Recipe, where: r.product_item_id == ^product_id and r.media == ^media, preload: [:product_item, :material_item])
+  def get_recipe_by_product_and_recipe_spec!(product_id, recipe_spec_id) do
+    Repo.one!(from r in Recipe, where: r.product_item_id == ^product_id and r.recipe_spec_id == ^recipe_spec_id, preload: [:product_item, :material_item, :recipe_spec])
   end
 
   @doc """
-  Gets all recipes by product_id and media.
+  Gets all recipes by product_id and recipe_spec_id.
 
   ## Examples
 
-      iex> list_recipes_by_product_and_media(123, "media")
+      iex> list_recipes_by_product_and_recipe_spec(123, 456)
       [%Recipe{}, ...]
 
   """
-  def list_recipes_by_product_and_media(product_id, media) do
-    Repo.all(from r in Recipe, where: r.product_item_id == ^product_id and r.media == ^media, preload: [:product_item, :material_item])
+  def list_recipes_by_product_and_recipe_spec(product_id, recipe_spec_id) do
+    Repo.all(from r in Recipe, where: r.product_item_id == ^product_id and r.recipe_spec_id == ^recipe_spec_id, preload: [:product_item, :material_item, :recipe_spec])
   end
 
   @doc """

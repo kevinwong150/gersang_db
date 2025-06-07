@@ -4,17 +4,18 @@ defmodule GersangDbWeb.RecipeLive.Show do
   alias GersangDb.Repo
   alias GersangDbWeb.Utils.ViewHelpers
   alias GersangDb.Gersang.Recipes
+  alias GersangDb.RecipeSpecs
   alias GersangDb.GersangItem
   alias GersangDb.Domain.Recipe
   alias GersangDbWeb.RecipeLive.Index, as: RecipeIndex
-
   @impl true
-  def mount(%{"product_id" => product_id, "media" => media_param}, _session, socket) do
+  def mount(%{"product_id" => product_id, "recipe_spec_id" => recipe_spec_id}, _session, socket) do
     all_recipes = Recipes.list_recipes()
     all_items = GersangItem.list_items()
     gersang_item_options = Enum.map(all_items, fn item -> {item.name, item.id} end)
 
     product = GersangItem.get_item!(String.to_integer(product_id))
+    recipe_spec = RecipeSpecs.get_recipe_spec!(recipe_spec_id)
 
     target_product_id = String.to_integer(product_id)
 
@@ -26,15 +27,16 @@ defmodule GersangDbWeb.RecipeLive.Show do
       |> assign(:grouped_recipe, grouped_recipes)
       |> assign(:gersang_item_options, gersang_item_options)
       |> assign(:product, product)
-      |> assign(:live_action, :show)
+      |> assign(:recipe_spec, recipe_spec)    |> assign(:live_action, :show)
 
     {:ok, socket}
   end
 
   @impl true
-  def handle_params(%{"product_id" => product_id, "media" => media_param, "action" => action}, _url, socket) do
+  def handle_params(%{"product_id" => product_id, "recipe_spec_id" => recipe_spec_id, "action" => action}, _url, socket) do
     live_action = String.to_atom(action)
-    recipes_for_form = Recipes.list_recipes_by_product_and_media(product_id, media_param)
+    recipe_spec = GersangDb.RecipeSpecs.get_recipe_spec!(recipe_spec_id)
+    recipes_for_form = Recipes.list_recipes_by_product_and_media(product_id, recipe_spec.media)
 
     socket = socket
     |> assign(:live_action, live_action)
@@ -47,20 +49,23 @@ defmodule GersangDbWeb.RecipeLive.Show do
     {:noreply, socket}
   end
 
-  def handle_params(%{"product_id" => product_id, "media" => media_param}, _url, socket) do
+  def handle_params(%{"product_id" => product_id, "recipe_spec_id" => recipe_spec_id}, _url, socket) do
     socket = assign_if_nil(socket, :live_action, :show)
               |> assign_if_nil(:page_title, page_title(socket.assigns.grouped_recipe))
 
     {:noreply, socket}
   end
-
   defp assign_if_nil(socket, key, value) do
     if socket.assigns[key], do: socket, else: assign(socket, key, value)
   end
 
   @impl true
-  def handle_event("delete", %{"product_id" => product_id, "media" => media}, socket) do
+  def handle_event("delete", %{"product_id" => product_id, "recipe_spec_id" => recipe_spec_id}, socket) do
     product_id_int = if is_binary(product_id), do: String.to_integer(product_id), else: product_id
+
+    # Get the recipe_spec to find the media
+    recipe_spec = GersangDb.RecipeSpecs.get_recipe_spec!(recipe_spec_id)
+    media = recipe_spec.media
 
     import Ecto.Query
     from(r in Recipe, where: r.product_item_id == ^product_id_int and r.media == ^media)
