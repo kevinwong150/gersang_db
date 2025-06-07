@@ -70,9 +70,8 @@ defmodule GersangDbWeb.RecipeLive.Index do
   @impl true
   def handle_info({GersangDbWeb.RecipeLive.FormComponent, {:saved, recipe}}, socket) do
     {:noreply, stream_insert(socket, :gersang_recipes, recipe)}
-  end
-  # Helper function to calculate total cost and create breakdown string
-  defp calculate_product_cost(materials_with_amounts) do
+  end  # Helper function to calculate total cost and create breakdown string
+  defp calculate_product_cost(materials_with_amounts, production_fees \\ [], production_amounts \\ []) do
     materials_for_costing =
       materials_with_amounts
       |> Enum.filter(fn %{item: material, amount: _amount} -> material.market_price && material.market_price > 0 end)
@@ -80,16 +79,50 @@ defmodule GersangDbWeb.RecipeLive.Index do
         %{name: material.name, total_price: material.market_price * amount}
       end)
 
+    total_production_fees = Enum.sum(production_fees)
+    # Use the minimum production amount (if multiple recipes exist for the same product)
+    effective_production_amount = case production_amounts do
+      [] -> 1
+      amounts -> Enum.min(amounts)
+    end
+
     case materials_for_costing do
-      [] ->
+      [] when total_production_fees == 0 ->
         {0, "No prices available"}
+      [] ->
+        total_before_division = total_production_fees
+        total = total_before_division / effective_production_amount
+        formatted_total = ViewHelpers.format_number_with_commas(total)
+        abbreviated = format_abbreviated_number(total)
+
+        total_display = case abbreviated do
+          nil -> formatted_total
+          abbrev -> "#{formatted_total} (#{abbrev})"
+        end
+
+        production_fee_breakdown = ViewHelpers.format_number_with_commas(total_production_fees)
+        equation = if effective_production_amount > 1 do
+          "(#{production_fee_breakdown}) / #{effective_production_amount} = #{total_display}"
+        else
+          "#{production_fee_breakdown} = #{total_display}"
+        end
+        {total, equation}
       priced_materials ->
-        total = Enum.reduce(priced_materials, 0, fn material, acc -> acc + material.total_price end)
-        breakdown =
+        materials_total = Enum.reduce(priced_materials, 0, fn material, acc -> acc + material.total_price end)
+        total_before_division = materials_total + total_production_fees
+        total = total_before_division / effective_production_amount
+
+        materials_breakdown =
           priced_materials
           |> Enum.map(fn material -> "#{ViewHelpers.format_number_with_commas(material.total_price)}" end)
-          # |> Enum.map(fn material -> "#{material.name} (#{ViewHelpers.format_number_with_commas(material.total_price)})" end)
           |> Enum.join(" + ")
+
+        breakdown_before_division = if total_production_fees > 0 do
+          production_fee_part = ViewHelpers.format_number_with_commas(total_production_fees)
+          "#{materials_breakdown} + #{production_fee_part}"
+        else
+          materials_breakdown
+        end
 
         formatted_total = ViewHelpers.format_number_with_commas(total)
         abbreviated = format_abbreviated_number(total)
@@ -99,7 +132,9 @@ defmodule GersangDbWeb.RecipeLive.Index do
           abbrev -> "#{formatted_total} (#{abbrev})"
         end
 
-        {total, "#{breakdown} = #{total_display}"}
+        equation = "(#{breakdown_before_division}) / #{effective_production_amount} = #{total_display}"
+
+        {total, equation}
     end
   end
 
@@ -119,6 +154,7 @@ defmodule GersangDbWeb.RecipeLive.Index do
   end
 
   def format_abbreviated_number(_number), do: nil
+
   def build_grouped_recipe(recipes, product_id \\ nil) do
     recipes
     |> Enum.group_by(& &1.product_item)
@@ -127,9 +163,19 @@ defmodule GersangDbWeb.RecipeLive.Index do
         product_recipes
         |> Enum.map(fn recipe ->
           %{item: recipe.material_item, amount: recipe.material_amount}
-        end)
+        end)      # Collect production fees from all recipe specs for this product
+      production_fees =
+        product_recipes
+        |> Enum.map(fn recipe -> recipe.recipe_spec.production_fee || 0 end)
+        |> Enum.uniq()
 
-      {total_cost, cost_breakdown} = calculate_product_cost(all_materials_with_amounts_for_product)
+      # Collect production amounts from all recipe specs for this product
+      production_amounts =
+        product_recipes
+        |> Enum.map(fn recipe -> recipe.recipe_spec.production_amount || 1 end)
+        |> Enum.uniq()
+
+      {total_cost, cost_breakdown} = calculate_product_cost(all_materials_with_amounts_for_product, production_fees, production_amounts)
 
       by_media =
         product_recipes

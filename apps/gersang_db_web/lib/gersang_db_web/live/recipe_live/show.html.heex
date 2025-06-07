@@ -1,6 +1,9 @@
 <.header>
   <%= @page_title %>
   <:actions>
+    <.link navigate={~p"/gersang/recipes"}>
+      <.button class="bg-gray-500 hover:bg-gray-600">← Back to Recipes</.button>
+    </.link>
     <.link :if={@grouped_recipe} patch={~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{@recipe_spec.id}/edit"} phx-click={JS.push_focus()}>
       <.button>Edit Recipe</.button>
     </.link>

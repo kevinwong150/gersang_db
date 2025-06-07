@@ -7,7 +7,6 @@ defmodule GersangDbWeb.Utils.ViewHelpers do
         Enum.join(tags, ", ")
     end
   end
-
   # Helper function to format numbers with commas
   def format_number_with_commas(number) when is_integer(number) do
     number
@@ -15,6 +14,25 @@ defmodule GersangDbWeb.Utils.ViewHelpers do
     |> String.reverse()
     |> String.replace(~r/(\d{3})(?=\d)/, "\\1,")
     |> String.reverse()
+  end
+
+  def format_number_with_commas(number) when is_float(number) do
+    # Round to 2 decimal places and then format
+    rounded = Float.round(number, 2)
+    if rounded == Float.round(rounded, 0) do
+      # If it's a whole number, format as integer
+      trunc(rounded)
+      |> Integer.to_string()
+      |> String.reverse()
+      |> String.replace(~r/(\d{3})(?=\d)/, "\\1,")
+      |> String.reverse()
+    else
+      # Format as float with 2 decimal places
+      :erlang.float_to_binary(rounded, decimals: 2)
+      |> String.reverse()
+      |> String.replace(~r/(\d{3})(?=\d)/, "\\1,")
+      |> String.reverse()
+    end
   end
 
   def format_number_with_commas(nil), do: "N/A"
