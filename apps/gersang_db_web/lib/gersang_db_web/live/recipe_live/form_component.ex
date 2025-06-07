@@ -304,11 +304,10 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
         if original_recipe_spec_id do
           # Get the original recipe_spec to find the original media
           original_recipe_spec = GersangDb.RecipeSpecs.get_recipe_spec!(original_recipe_spec_id)
-          original_media = original_recipe_spec.media
           original_product_item_id = original_recipe_spec.product_item_id
 
           Ecto.Multi.delete_all(multi, :delete_existing,
-            from(r in GersangDb.Domain.Recipe, where: r.product_item_id == ^original_product_item_id and r.media == ^original_media)
+            from(r in GersangDb.Domain.Recipe, where: r.product_item_id == ^original_product_item_id and r.recipe_spec_id == ^original_recipe_spec.id)
           )
         else
           multi
