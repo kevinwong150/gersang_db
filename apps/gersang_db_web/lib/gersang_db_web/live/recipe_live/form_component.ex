@@ -245,7 +245,6 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
     changeset =
       EmbeddedRecipe.changeset(current_embedded_recipe, attrs_for_changeset)
       |> Map.put(:action, :validate)
-      |> IO.inspect(label: "Recipe Changeset Validation")
 
     {:noreply, assign_form(socket, changeset)}
   end

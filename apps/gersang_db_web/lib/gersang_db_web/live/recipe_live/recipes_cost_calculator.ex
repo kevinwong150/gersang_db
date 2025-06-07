@@ -1,6 +1,7 @@
 defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
   use GersangDbWeb, :live_component
 
+  alias GersangDb.Repo
   alias GersangDbWeb.Router.Helpers, as: Routes
   alias GersangDb.Recipes
   alias GersangDb.GersangItem
@@ -31,6 +32,7 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
 
     {:ok, socket}
   end
+
   @impl true
   def handle_event("calculate", %{"ingredient_costs" => ingredient_costs}, socket) do
     # In a real scenario, you'd parse ingredient_costs,
@@ -51,7 +53,6 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
   def handle_event("update_ingredient_cost", %{"item-id" => item_id, "value" => cost}, socket) do
     # Logic to update a specific ingredient's cost in the form
     # This would likely involve updating assigns that are used to render the form fields
-    IO.inspect(%{item_id: item_id, cost: cost}, label: "Updating ingredient cost")
 
     # Parse the cost and update the ingredient_costs map, ensuring integers only
     parsed_cost = case cost do
@@ -119,6 +120,7 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
 
     {:noreply, assign(socket, :expanded_nodes, updated_expanded_nodes)}
   end
+
   def handle_event("collapse_all", %{"item-id" => item_id}, socket) do
     item_id_int = String.to_integer(item_id)
     expanded_nodes = socket.assigns.expanded_nodes
@@ -135,32 +137,14 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
     {:noreply, assign(socket, :expanded_nodes, updated_expanded_nodes)}
   end
 
-  # The render function is removed as requested.
-  # The template will be rendered by the parent LiveView or another mechanism.
-  # If this component needs its own template, you'd typically use the ~H sigil here
-  # or keep the render/1 function pointing to an external .html.heex file.
-  # For now, assuming it's handled by the caller or will be added later.
-
-  def debug_build_materials_tree(%GersangDb.Domain.GersangItem{} = product) do
-    %{
-      name: product.name,
-      materials: debug_build_materials_tree(product.materials),
-    }
-  end
-
-  def debug_build_materials_tree(materials) when is_list(materials) do
-    materials
-    |> Enum.map(fn material ->
-      %{
-        name: material.name,
-        materials: debug_build_materials_tree(material.materials)
-      }
-    end)
-  end
-
   def build_materials_tree(%GersangDb.Domain.GersangItem{} = product) do
     layer = 0
-    tree = %{"#{layer}" => [%{item: product, parent_id: nil}]}
+    tree = %{"#{layer}" => [%{
+      item: product,
+      production_fee: get_item_production_fee(product),
+      production_amount: get_item_production_amount(product),
+      parent_id: nil
+    }]}
 
     next_layer_materials_with_parents =
       product.materials
@@ -168,6 +152,8 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
         %{
           item: material,
           amount: get_material_amount_from_recipe(product, material),
+          production_fee: get_item_production_fee(material),
+          production_amount: get_item_production_amount(material),
           parent_id: product.id
         }
       end)
@@ -199,10 +185,26 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
         %{
           item: material,
           amount: get_material_amount_from_recipe(item, material),
+          production_fee: get_item_production_fee(material),
+          production_amount: get_item_production_amount(material),
           parent_id: item.id
         }
       end)
     end)
+  end
+
+  def get_item_production_fee(%GersangDb.Domain.GersangItem{} = item) do
+    item
+    |> Map.get(:recipes_as_product, [])
+    |> Enum.map(& &1.recipe_spec.production_fee)
+    |> Enum.max(fn -> 0 end) # Return the maximum production fee from all recipes, or 0 if none
+  end
+
+  def get_item_production_amount(%GersangDb.Domain.GersangItem{} = item) do
+    item
+    |> Map.get(:recipes_as_product, [])
+    |> Enum.map(& &1.recipe_spec.production_amount)
+    |> Enum.max(fn -> 1 end) # Return the maximum production amount from all recipes, or 1 if none
   end
 
   def get_material_amount_from_recipe(%GersangDb.Domain.GersangItem{} = product, %GersangDb.Domain.GersangItem{} = material) do
@@ -274,32 +276,68 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-            <% end %>            <div class="flex flex-col">            <div class="flex items-center gap-2">
+            <% end %>
+
+            <div class="flex flex-col">
               <div class="flex items-center gap-2">
-                <span class={get_item_name_styling(@layer_index, @has_children)}><%= @node.item.name %></span>
-                <%= if Map.has_key?(@node, :amount) && @node.amount && @node.amount > 1 do %>
-                  <span class="px-2 py-1 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full border border-indigo-300 shadow-sm">
-                    × <%= @node.amount %>
-                  </span>
+                <div class="flex items-center gap-2">
+                  <span class={get_item_name_styling(@layer_index, @has_children)}><%= @node.item.name %></span>
+                  <%= if Map.has_key?(@node, :amount) && @node.amount && @node.amount > 1 do %>
+                    <span class="px-2 py-1 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full border border-indigo-300 shadow-sm">
+                      × <%= @node.amount %>
+                    </span>
+                  <% end %>
+                  <!-- Production Fee Display -->
+                  <%= if @node.production_fee && @node.production_fee > 0 do %>
+                    <span class="px-2 py-1 text-xs font-bold bg-orange-100 text-orange-800 rounded-full border border-orange-300 shadow-sm" title="Production Fee">
+                      🔧 <%= ViewHelpers.format_number_with_commas(@node.production_fee) %>
+                    </span>
+                  <% end %>
+                  <!-- Production Amount Display -->
+                  <%= if @node.production_amount && @node.production_amount > 1 do %>
+                    <span class="px-2 py-1 text-xs font-bold bg-green-100 text-green-800 rounded-full border border-green-300 shadow-sm" title="Production Amount">
+                      📦 <%= @node.production_amount %>
+                    </span>
+                  <% end %>
+                </div>
+
+                <%= if @has_children do %>
+                  <!-- Total Cost Display - Prominent -->
+                  <div class="ml-auto px-3 py-1.5 bg-gradient-to-r from-emerald-100 to-green-100 border-2 border-emerald-300 rounded-lg shadow-sm">
+                    <span class="text-sm font-bold text-emerald-800">
+                      💰 <%=
+                        total_cost = calculate_materials_cost(@node.item.id, @all_nodes, @ingredient_costs)
+                        formatted_total = ViewHelpers.format_number_with_commas(total_cost)
+                        abbreviated = format_abbreviated_number(total_cost)
+                        case abbreviated do
+                          nil -> formatted_total
+                          abbrev -> "#{formatted_total} (#{abbrev})"
+                        end
+                      %>
+                    </span>
+                  </div>
                 <% end %>
-              </div>              <%= if @has_children do %>
-                <!-- Total Cost Display - Prominent -->
-                <div class="ml-auto px-3 py-1.5 bg-gradient-to-r from-emerald-100 to-green-100 border-2 border-emerald-300 rounded-lg shadow-sm">
-                  <span class="text-sm font-bold text-emerald-800">
-                    💰 <%=
-                      total_cost = calculate_materials_cost(@node.item.id, @all_nodes, @ingredient_costs)
-                      formatted_total = ViewHelpers.format_number_with_commas(total_cost)
-                      abbreviated = format_abbreviated_number(total_cost)
-                      case abbreviated do
-                        nil -> formatted_total
-                        abbrev -> "#{formatted_total} (#{abbrev})"
-                      end
-                    %>
-                  </span>
+              </div>
+
+              <span class="text-xs text-slate-500 font-medium"># <%= @node.item.id %></span>
+
+              <!-- Production Information Section -->
+              <%= if @node.production_fee && @node.production_fee > 0 || @node.production_amount && @node.production_amount > 1 do %>
+                <div class="mt-2 flex gap-3 text-xs">
+                  <%= if @node.production_fee && @node.production_fee > 0 do %>
+                    <div class="flex items-center gap-1 px-2 py-1 bg-orange-50 border border-orange-200 rounded-md">
+                      <span class="text-orange-600 font-medium">🔧 Production Fee:</span>
+                      <span class="text-orange-800 font-bold"><%= ViewHelpers.format_number_with_commas(@node.production_fee) %></span>
+                    </div>
+                  <% end %>
+                  <%= if @node.production_amount && @node.production_amount > 1 do %>
+                    <div class="flex items-center gap-1 px-2 py-1 bg-green-50 border border-green-200 rounded-md">
+                      <span class="text-green-600 font-medium">📦 Produces:</span>
+                      <span class="text-green-800 font-bold"><%= @node.production_amount %> items</span>
+                    </div>
+                  <% end %>
                 </div>
               <% end %>
-            </div>
-              <span class="text-xs text-slate-500 font-medium"># <%= @node.item.id %></span>
             </div>
           </div>
 
@@ -328,7 +366,10 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
               </button>
             </div>
           <% end %>
-        </div>        <div class="flex gap-4 items-end">          <!-- Cost Breakdown Display (for items with materials) - First -->
+        </div>
+
+        <div class="flex gap-4 items-end">
+          <!-- Cost Breakdown Display (for items with materials) - First -->
           <%= if @has_children do %>
             <div class="flex flex-col flex-1">
               <label class="text-sm font-semibold text-amber-700 mb-2">📊 Cost Breakdown</label>
@@ -343,10 +384,13 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
                 </div>
               </div>
             </div>
-          <% end %><!-- Cost Input (Editable) - Second, hide for root product (layer 0) -->
+          <% end %>
+
+          <!-- Cost Input (Editable) - Second, hide for root product (layer 0) -->
           <%= if @layer_index > 0 do %>
             <div class="flex flex-col flex-1">
-              <label class="text-sm font-semibold text-blue-700 mb-2">✏️ Cost</label>              <input
+              <label class="text-sm font-semibold text-blue-700 mb-2">✏️ Cost</label>
+              <input
                 type="number"
                 step="10000"
                 value={Map.get(@ingredient_costs, @node.item.id, @node.item.market_price || 0)}
@@ -362,7 +406,8 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
 
           <!-- Market Price Input (Disabled) - Third -->
           <div class="flex flex-col flex-1">
-            <label class="text-sm font-semibold text-gray-600 mb-2">🏪 Market Price</label>            <input
+            <label class="text-sm font-semibold text-gray-600 mb-2">🏪 Market Price</label>
+            <input
               type="number"
               disabled
               value={trunc(@node.item.market_price || 0)}
@@ -394,7 +439,7 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
     """
   end
 
-  # Function component for rendering interactive cost breakdown
+  # Function component for rendering interactive cost breakdown with production costs
   attr :parent_item_id, :integer, required: true
   attr :all_nodes, :map, required: true
   attr :ingredient_costs, :map, default: %{}
@@ -404,12 +449,15 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
     assigns = assign(assigns, :breakdown_data, breakdown_data)
 
     ~H"""
-    <div class="text-yellow-800 font-mono text-xs">
+    <div class="text-yellow-800 font-mono text-xs space-y-2">
       <%= case @breakdown_data do %>
-        <% {_total, _display, []} -> %>
+        <% {_total, _equation, [], _production_fee, _production_amount} -> %>
           <span>No materials available</span>
-        <% {total, _display, materials} when length(materials) > 0 -> %>
+
+        <% {total, equation, materials, production_fee, production_amount} when length(materials) > 0 -> %>
+          <!-- Interactive materials breakdown -->
           <div class="flex flex-wrap items-center gap-1">
+            <span class="text-yellow-700 font-medium">(</span>
             <%= for {material, index} <- Enum.with_index(materials) do %>
               <%= if index > 0 do %>
                 <span class="text-yellow-600"> + </span>
@@ -427,12 +475,170 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
                 </div>
               </span>
             <% end %>
+
+            <%= if production_fee > 0 do %>
+              <span class="text-yellow-600"> + </span>
+              <span class="text-orange-700 font-medium hover:bg-yellow-200 hover:text-yellow-900 px-1 rounded cursor-pointer transition-colors relative group" title="Production Fee">
+                <%= ViewHelpers.format_number_with_commas(production_fee) %>
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                  Production Fee
+                </div>
+              </span>
+            <% end %>
+
+            <span class="text-yellow-700 font-medium">)</span>
+
+            <%= if production_amount > 1 do %>
+              <span class="text-yellow-600"> ÷ </span>
+              <span class="text-green-700 font-medium" title="Production Amount">
+                <%= production_amount %>
+              </span>
+            <% end %>
+
+            <span class="text-yellow-600"> = </span>
+            <span class="text-emerald-800 font-bold">
+              <%= ViewHelpers.format_number_with_commas(total) %>
+            </span>
           </div>
+
         <% _ -> %>
           <span>No prices available</span>
       <% end %>
     </div>
     """
+  end
+
+  # Helper function to get an item from all nodes by item_id
+  defp get_item_from_nodes(item_id, all_nodes) do
+    all_nodes
+    |> Enum.flat_map(fn {_layer, nodes} -> nodes end)
+    |> Enum.find(fn %{item: item} -> item.id == item_id end)
+  end
+
+  defp calculate_materials_cost(item_id, all_nodes, ingredient_costs) do
+    # Find all direct materials (children) of this item
+    children = find_children(item_id, get_item_layer(item_id, all_nodes) + 1, all_nodes)
+
+    if Enum.empty?(children) do
+      0  # No materials, so cost is 0
+    else
+      # Calculate materials cost
+      materials_total = children
+      |> Enum.reduce(0, fn %{item: child_item, amount: amount}, acc ->
+        # Check if this child has its own materials (is a parent item)
+        child_has_materials = !Enum.empty?(find_children(child_item.id, get_item_layer(child_item.id, all_nodes) + 1, all_nodes))
+
+        child_cost = if child_has_materials do
+          # If child has materials, use its calculated cost (recursive)
+          calculate_materials_cost(child_item.id, all_nodes, ingredient_costs)
+        else
+          # If child has no materials, use its input cost
+          Map.get(ingredient_costs, child_item.id, 0)
+        end
+
+        # Multiply by the amount needed
+        total_cost = child_cost * (amount || 1)
+        acc + total_cost
+      end)
+
+      # Get the current item to access its production info
+      current_item = get_item_from_nodes(item_id, all_nodes)
+      production_fee = (current_item && current_item[:production_fee]) || 0
+      production_amount = (current_item && current_item[:production_amount]) || 1
+
+      # Apply the formula: (materials_total + production_fee) / production_amount
+      total_before_division = materials_total + production_fee
+      total_before_division / production_amount
+    end
+  end
+
+  defp calculate_materials_cost_breakdown(item_id, all_nodes, ingredient_costs) do
+    # Find all direct materials (children) of this item
+    children = find_children(item_id, get_item_layer(item_id, all_nodes) + 1, all_nodes)
+
+    # Get the current item to access its production info
+    current_item = get_item_from_nodes(item_id, all_nodes)
+    production_fee = (current_item && current_item[:production_fee]) || 0
+    production_amount = (current_item && current_item[:production_amount]) || 1
+
+    if Enum.empty?(children) do
+      # If only production fee exists
+      if production_fee > 0 do
+        total = production_fee / production_amount
+        formatted_total = ViewHelpers.format_number_with_commas(total)
+
+        equation = if production_amount > 1 do
+          "#{ViewHelpers.format_number_with_commas(production_fee)} ÷ #{production_amount} = #{formatted_total}"
+        else
+          "#{ViewHelpers.format_number_with_commas(production_fee)} = #{formatted_total}"
+        end
+
+        {total, equation, [], production_fee, production_amount}
+      else
+        {0, "No materials or production costs available", [], 0, 1}
+      end
+    else
+      materials_for_costing =
+        children
+        |> Enum.map(fn %{item: child_item, amount: amount} ->
+          # Check if this child has its own materials (is a parent item)
+          child_has_materials = !Enum.empty?(find_children(child_item.id, get_item_layer(child_item.id, all_nodes) + 1, all_nodes))
+
+          child_cost = if child_has_materials do
+            # If child has materials, use its calculated cost (recursive)
+            calculate_materials_cost(child_item.id, all_nodes, ingredient_costs)
+          else
+            # If child has no materials, use its input cost
+            Map.get(ingredient_costs, child_item.id, 0)
+          end
+
+          # Multiply by the amount needed
+          total_cost = child_cost * (amount || 1)
+
+          %{name: child_item.name, total_price: total_cost, item_id: child_item.id, amount: amount || 1}
+        end)
+        |> Enum.filter(fn %{total_price: price} -> price > 0 end)
+
+      case materials_for_costing do
+        [] when production_fee == 0 ->
+          {0, "No prices available", [], 0, 1}
+        [] ->
+          # Only production fee
+          total = production_fee / production_amount
+          formatted_total = ViewHelpers.format_number_with_commas(total)
+
+          equation = if production_amount > 1 do
+            "#{ViewHelpers.format_number_with_commas(production_fee)} ÷ #{production_amount} = #{formatted_total}"
+          else
+            "#{ViewHelpers.format_number_with_commas(production_fee)} = #{formatted_total}"
+          end
+
+          {total, equation, [], production_fee, production_amount}
+        priced_materials ->
+          materials_total = Enum.reduce(priced_materials, 0, fn material, acc -> acc + material.total_price end)
+          total_before_division = materials_total + production_fee
+          total = total_before_division / production_amount
+
+          # Build the equation string
+          materials_breakdown =
+            priced_materials
+            |> Enum.map(fn material -> ViewHelpers.format_number_with_commas(material.total_price) end)
+            |> Enum.join(" + ")
+
+          breakdown_before_division = if production_fee > 0 do
+            production_fee_part = ViewHelpers.format_number_with_commas(production_fee)
+            "(#{materials_breakdown} + #{production_fee_part})"
+          else
+            "(#{materials_breakdown})"
+          end
+
+          formatted_total = ViewHelpers.format_number_with_commas(total)
+
+          equation = "#{breakdown_before_division} / #{production_amount} = #{formatted_total}"
+
+          {total, equation, priced_materials, production_fee, production_amount}
+      end
+    end
   end
 
   defp find_children(parent_id, child_layer_index, all_nodes) do
@@ -442,6 +648,7 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
       nodes -> Enum.filter(nodes, &(&1.parent_id == parent_id))
     end
   end
+
   defp get_highlight_class(current_node_id, highlighted_item_id, related_ids_map) do
     cond do
       current_node_id == highlighted_item_id ->
@@ -489,6 +696,7 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
 
     "#{base_classes} #{color_class}"
   end
+
   defp initialize_ingredient_costs(materials_tree) do
     # Initialize all items with their market price as default cost
     materials_tree
@@ -503,77 +711,7 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
       Map.put(acc, item.id, price)
     end)
   end
-  defp calculate_materials_cost(item_id, all_nodes, ingredient_costs) do
-    # Find all direct materials (children) of this item
-    children = find_children(item_id, get_item_layer(item_id, all_nodes) + 1, all_nodes)
 
-    if Enum.empty?(children) do
-      0  # No materials, so cost is 0
-    else      children
-      |> Enum.reduce(0, fn %{item: child_item, amount: amount}, acc ->
-        # Check if this child has its own materials (is a parent item)
-        child_has_materials = !Enum.empty?(find_children(child_item.id, get_item_layer(child_item.id, all_nodes) + 1, all_nodes))
-
-        child_cost = if child_has_materials do
-          # If child has materials, use its calculated cost (recursive)
-          calculate_materials_cost(child_item.id, all_nodes, ingredient_costs)
-        else
-          # If child has no materials, use its input cost
-          Map.get(ingredient_costs, child_item.id, 0)
-        end
-
-        # Multiply by the amount needed
-        total_cost = child_cost * (amount || 1)
-        acc + total_cost
-      end)
-    end
-  end
-  defp calculate_materials_cost_breakdown(item_id, all_nodes, ingredient_costs) do
-    # Find all direct materials (children) of this item
-    children = find_children(item_id, get_item_layer(item_id, all_nodes) + 1, all_nodes)
-
-    if Enum.empty?(children) do
-      {0, "No materials available", []}
-    else      materials_for_costing =
-        children
-        |> Enum.map(fn %{item: child_item, amount: amount} ->
-          # Check if this child has its own materials (is a parent item)
-          child_has_materials = !Enum.empty?(find_children(child_item.id, get_item_layer(child_item.id, all_nodes) + 1, all_nodes))
-
-          child_cost = if child_has_materials do
-            # If child has materials, use its calculated cost (recursive)
-            calculate_materials_cost(child_item.id, all_nodes, ingredient_costs)
-          else
-            # If child has no materials, use its input cost
-            Map.get(ingredient_costs, child_item.id, 0)
-          end
-
-          # Multiply by the amount needed
-          total_cost = child_cost * (amount || 1)
-
-          %{name: child_item.name, total_price: total_cost, item_id: child_item.id, amount: amount || 1}
-        end)
-        |> Enum.filter(fn %{total_price: price} -> price > 0 end)
-
-      case materials_for_costing do
-        [] ->
-          {0, "No prices available", []}
-        priced_materials ->
-          total = Enum.reduce(priced_materials, 0, fn material, acc -> acc + material.total_price end)
-
-          formatted_total = ViewHelpers.format_number_with_commas(total)
-
-          abbreviated = format_abbreviated_number(total)
-
-          total_display = case abbreviated do
-            nil -> formatted_total
-            abbrev -> "#{formatted_total} (#{abbrev})"
-          end
-
-          {total, total_display, priced_materials}
-      end
-    end
-  end
   # Helper function to format abbreviated numbers for large values
   defp format_abbreviated_number(number) when number >= 1_000_000_000 do
     abbreviated = number / 1_000_000_000
@@ -590,6 +728,7 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
   end
 
   defp format_abbreviated_number(_number), do: nil
+
   defp get_item_layer(item_id, all_nodes) do
     # Find which layer this item is in
     all_nodes

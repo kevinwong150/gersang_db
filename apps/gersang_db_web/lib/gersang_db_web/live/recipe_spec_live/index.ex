@@ -4,7 +4,7 @@ defmodule GersangDbWeb.RecipeSpecLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :recipe_specs, RecipeSpecs.list_recipe_specs() |> IO.inspect(label: "Recipe Specs"))}
+    {:ok, stream(socket, :recipe_specs, RecipeSpecs.list_recipe_specs())}
   end
 
   @impl true

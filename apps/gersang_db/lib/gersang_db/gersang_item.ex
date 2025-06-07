@@ -108,7 +108,7 @@ defmodule GersangDb.GersangItem do
 
   def preload_material(gersang_item) do
     gersang_item
-    |> Repo.preload(:materials)
+    |> Repo.preload([:materials, recipes_as_product: :recipe_spec])
     |> then(fn item ->
       item
       |> Map.put(:materials, Enum.map(item.materials, &preload_material(&1)))
