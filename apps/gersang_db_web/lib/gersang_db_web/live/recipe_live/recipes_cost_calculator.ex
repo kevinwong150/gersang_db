@@ -167,6 +167,7 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
       |> Enum.map(fn material ->
         %{
           item: material,
+          amount: get_material_amount_from_recipe(product, material),
           parent_id: product.id
         }
       end)
@@ -195,10 +196,28 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
     |> Enum.flat_map(fn %{item: item} ->
       item.materials
       |> Enum.map(fn material ->
-        %{item: material, parent_id: item.id}
+        %{
+          item: material,
+          amount: get_material_amount_from_recipe(item, material),
+          parent_id: item.id
+        }
       end)
     end)
-  end  # Function component for rendering a tree node
+  end
+
+  def get_material_amount_from_recipe(%GersangDb.Domain.GersangItem{} = product, %GersangDb.Domain.GersangItem{} = material) do
+    product
+    |> Map.get(:recipes_as_product, [])
+    |> Enum.find(fn recipe ->
+      recipe.material_item_id == material.id
+    end)
+    |> then(fn
+      nil -> 1 # Default amount if no recipe found
+      recipe -> recipe.material_amount || 1 # Use the recipe's amount or default to 1
+    end)
+  end
+
+  # Function component for rendering a tree node
   attr :node, :map, required: true
   attr :layer_index, :integer, required: true
   attr :all_nodes, :map, required: true
@@ -255,10 +274,31 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-            <% end %>
-
-            <div class="flex flex-col">
-              <span class={get_item_name_styling(@layer_index, @has_children)}><%= @node.item.name %></span>
+            <% end %>            <div class="flex flex-col">            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2">
+                <span class={get_item_name_styling(@layer_index, @has_children)}><%= @node.item.name %></span>
+                <%= if Map.has_key?(@node, :amount) && @node.amount && @node.amount > 1 do %>
+                  <span class="px-2 py-1 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full border border-indigo-300 shadow-sm">
+                    × <%= @node.amount %>
+                  </span>
+                <% end %>
+              </div>              <%= if @has_children do %>
+                <!-- Total Cost Display - Prominent -->
+                <div class="ml-auto px-3 py-1.5 bg-gradient-to-r from-emerald-100 to-green-100 border-2 border-emerald-300 rounded-lg shadow-sm">
+                  <span class="text-sm font-bold text-emerald-800">
+                    💰 <%=
+                      total_cost = calculate_materials_cost(@node.item.id, @all_nodes, @ingredient_costs)
+                      formatted_total = ViewHelpers.format_number_with_commas(total_cost)
+                      abbreviated = format_abbreviated_number(total_cost)
+                      case abbreviated do
+                        nil -> formatted_total
+                        abbrev -> "#{formatted_total} (#{abbrev})"
+                      end
+                    %>
+                  </span>
+                </div>
+              <% end %>
+            </div>
               <span class="text-xs text-slate-500 font-medium"># <%= @node.item.id %></span>
             </div>
           </div>
@@ -288,11 +328,10 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
               </button>
             </div>
           <% end %>
-        </div>        <div class="flex gap-4 items-end">
-          <!-- Calculated Cost Display (for items with materials) - First -->
+        </div>        <div class="flex gap-4 items-end">          <!-- Cost Breakdown Display (for items with materials) - First -->
           <%= if @has_children do %>
             <div class="flex flex-col flex-1">
-              <label class="text-sm font-semibold text-amber-700 mb-2">💰 Calculated Cost</label>
+              <label class="text-sm font-semibold text-amber-700 mb-2">📊 Cost Breakdown</label>
               <div class="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl p-4 shadow-sm">
                 <div class="flex flex-col">
                   <.cost_breakdown_formula
@@ -304,22 +343,22 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
                 </div>
               </div>
             </div>
+          <% end %><!-- Cost Input (Editable) - Second, hide for root product (layer 0) -->
+          <%= if @layer_index > 0 do %>
+            <div class="flex flex-col flex-1">
+              <label class="text-sm font-semibold text-blue-700 mb-2">✏️ Cost</label>              <input
+                type="number"
+                step="10000"
+                value={Map.get(@ingredient_costs, @node.item.id, @node.item.market_price || 0)}
+                phx-blur="update_ingredient_cost"
+                phx-value-item-id={@node.item.id}
+                phx-target={@target_handler}
+                name={"ingredient_costs[#{@node.item.id}]"}
+                class="px-3 py-2 text-sm border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-blue-50 cursor-text"
+                placeholder="Enter cost"
+              />
+            </div>
           <% end %>
-
-          <!-- Cost Input (Editable) - Second -->
-          <div class="flex flex-col flex-1">
-            <label class="text-sm font-semibold text-blue-700 mb-2">✏️ Cost</label>            <input
-              type="number"
-              step="10000"
-              value={Map.get(@ingredient_costs, @node.item.id, @node.item.market_price || 0)}
-              phx-blur="update_ingredient_cost"
-              phx-value-item-id={@node.item.id}
-              phx-target={@target_handler}
-              name={"ingredient_costs[#{@node.item.id}]"}
-              class="px-3 py-2 text-sm border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 bg-blue-50 cursor-text"
-              placeholder="Enter cost"
-            />
-          </div>
 
           <!-- Market Price Input (Disabled) - Third -->
           <div class="flex flex-col flex-1">
@@ -374,7 +413,8 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
             <%= for {material, index} <- Enum.with_index(materials) do %>
               <%= if index > 0 do %>
                 <span class="text-yellow-600"> + </span>
-              <% end %>              <span
+              <% end %>
+              <span
                 class="hover:bg-yellow-200 hover:text-yellow-900 px-1 rounded cursor-pointer transition-colors relative group"
                 phx-click="highlight_material"
                 phx-value-item-id={material.item_id}
@@ -383,18 +423,10 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
               >
                 <%= ViewHelpers.format_number_with_commas(material.total_price) %>
                 <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-                  <%= material.name %>
+                  <%= material.name %><%= if Map.has_key?(material, :amount) && material.amount > 1, do: " × #{material.amount}", else: "" %>
                 </div>
               </span>
             <% end %>
-            <span class="text-yellow-600 mx-1"> = </span>            <span class="font-semibold">
-              <%= ViewHelpers.format_number_with_commas(total) %>
-              <%= case format_abbreviated_number(total) do %>
-                <% nil -> %>
-                <% abbrev -> %>
-                  <span class="text-xs"> (<%= abbrev %>)</span>
-              <% end %>
-            </span>
           </div>
         <% _ -> %>
           <span>No prices available</span>
@@ -477,9 +509,8 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
 
     if Enum.empty?(children) do
       0  # No materials, so cost is 0
-    else
-      children
-      |> Enum.reduce(0, fn %{item: child_item}, acc ->
+    else      children
+      |> Enum.reduce(0, fn %{item: child_item, amount: amount}, acc ->
         # Check if this child has its own materials (is a parent item)
         child_has_materials = !Enum.empty?(find_children(child_item.id, get_item_layer(child_item.id, all_nodes) + 1, all_nodes))
 
@@ -491,7 +522,9 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
           Map.get(ingredient_costs, child_item.id, 0)
         end
 
-        acc + child_cost
+        # Multiply by the amount needed
+        total_cost = child_cost * (amount || 1)
+        acc + total_cost
       end)
     end
   end
@@ -501,10 +534,9 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
 
     if Enum.empty?(children) do
       {0, "No materials available", []}
-    else
-      materials_for_costing =
+    else      materials_for_costing =
         children
-        |> Enum.map(fn %{item: child_item} ->
+        |> Enum.map(fn %{item: child_item, amount: amount} ->
           # Check if this child has its own materials (is a parent item)
           child_has_materials = !Enum.empty?(find_children(child_item.id, get_item_layer(child_item.id, all_nodes) + 1, all_nodes))
 
@@ -516,7 +548,10 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
             Map.get(ingredient_costs, child_item.id, 0)
           end
 
-          %{name: child_item.name, total_price: child_cost, item_id: child_item.id}
+          # Multiply by the amount needed
+          total_cost = child_cost * (amount || 1)
+
+          %{name: child_item.name, total_price: total_cost, item_id: child_item.id, amount: amount || 1}
         end)
         |> Enum.filter(fn %{total_price: price} -> price > 0 end)
 
