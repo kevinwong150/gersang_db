@@ -21,27 +21,23 @@ gersang_item_attrs = [
   },
   %{
     name: "Yellow Force Stone",
-    market_price: 0
+    market_price: 1300000
   },
   %{
     name: "Red Force Stone",
-    market_price: 0
+    market_price: 8000
   },
   %{
     name: "Blue Force Stone",
-    market_price: 0
+    market_price: 50000
   },
   %{
     name: "Moon Seal",
-    market_price: 2000
+    market_price: 8000000
   },
   %{
     name: "Sun Seal",
-    market_price: 1000
-  },
-  %{
-    name: "Five color powder",
-    market_price: 1500000
+    market_price: 5000000
   },
   %{
     name: "Force of Deities(Thunder)",
@@ -179,8 +175,71 @@ gersang_item_attrs = [
     name: "Thunder specter stone",
     market_price: 2000000
   },
+  %{name: "Wolfporia", market_price: 60000},
+  %{name: "Honeysuckle", market_price: 30000},
+  %{name: "Thousand Year Lake Plant", market_price: 60000},
+  %{name: "Sedum Album", market_price: 60000},
+  %{name: "Honeyweed", market_price: 100000},
+  %{name: "Snow Ginseng", market_price: 70000},
+  %{name: "Sang Hwang Mushroom", market_price: 10000},
+  %{name: "Windflower", market_price: 80000},
+  %{name: "Kid Ginseng", market_price: 80000},
+  %{name: "Solar Flower", market_price: 80000},
+  %{name: "Flame Flower", market_price: 80000},
+  %{name: "Seokgyun Swamp", market_price: 5000},
+  %{name: "Mountain Flower", market_price: 120000},
+  %{name: "Prickly Pear", market_price: 120000},
+  %{name: "Golden lotus", market_price: 120000},
+  %{name: "Poor Essence", market_price: 300000},
+  %{name: "Fair Essence", market_price: 5000000},
+  %{name: "Good Essence", market_price: 2000000},
+  %{name: "Life Essence", market_price: 2500000},
+  %{name: "Imoogi's scale", market_price: 2000000},
+  %{name: "Dazzleweed", market_price: 80000},
+  %{name: "Food", market_price: 500000},
+  %{name: "Wandering Artist's Phrase", market_price: 10000000},
+  %{name: "Nine-Leafed Plant", market_price: 5000},
+  %{name: "Mana Pill(1D)", market_price: 5000000},
+  %{name: "Temporal Powder", market_price: 28000000},
+  %{name: "Root of life", market_price: 50000},
+  %{name: "Mysterious medicine of death", market_price: 2000000},
+  %{name: "Hardened Wood", market_price: 600000},
+  %{name: "Storage Ticket", market_price: 60000000},
+  %{name: "Mysterious medicine of life", market_price: 1400000000},
+  %{name: "Mana Pill(15D)", market_price: 50000000},
+  %{name: "Devil wing - 1day", market_price: 8500000},
+  %{name: "Immortality", market_price: 700000},
+  %{name: "The Art of War Vol.24", market_price: 4000000},
+  %{name: "Tranquilizer", market_price: 1600000},
+  %{name: "Five color powder", market_price: 1500000},
+  %{name: "Polish Powder", market_price: 1800000},
+  %{name: "Gold Powder", market_price: 400000},
+  %{name: "Red Powder", market_price: 1000000},
+  %{name: "Black Powder", market_price: 500000},
+  %{name: "White Powder", market_price: 300000},
+  %{name: "Blue Powder", market_price: 700000},
+  %{name: "Obsidian Ring", market_price: 500000},
+  %{name: "Zhuge Liang\'s Ring", market_price: 280000000},
+  %{name: "Demon Ring", market_price: 350000000},
+  %{name: "Five color Crystal", market_price: 0},
+  %{name: "Powered Bloodstone", market_price: 68000000},
+  %{name: "Powered Obsidian", market_price: 45000000},
+  %{name: "Powered Fisheye", market_price: 41000000},
+  %{name: "Powered Goldstone", market_price: 36000000},
+  %{name: "Powered White Crystal", market_price: 33000000},
+  %{name: "Carved Fisheye", market_price: 0},
+  %{name: "Carved Bloodstone", market_price: 0},
+  %{name: "Carved Obsidian", market_price: 0},
+  %{name: "Carved Goldstone", market_price: 0},
+  %{name: "Carved White Crystal", market_price: 0},
+  %{name: "Soul Crystal", market_price: 6600000},
+  %{name: "Bloodstone", market_price: 0},
+  %{name: "Obsidian", market_price: 0},
+  %{name: "Fisheye", market_price: 0},
+  %{name: "Goldstone", market_price: 0},
+  %{name: "White Crystal", market_price: 0}
 ]
 
 Enum.map(gersang_item_attrs, fn attr ->
-  # GersangDb.GersangItem.create_item(attr)
+  GersangDb.GersangItem.create_item(attr)
 end)
