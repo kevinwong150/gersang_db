@@ -1,0 +1,53 @@
+<.header>
+  Listing Recipe Specs
+  <:actions>
+    <.link patch={~p"/gersang/recipe_specs/new"}>
+      <.button>New Recipe Spec</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="recipe_specs"
+  rows={@streams.recipe_specs}
+  row_click={fn {_id, recipe_spec} -> JS.navigate(~p"/gersang/recipe_specs/#{recipe_spec}") end}
+>
+  <:col :let={{_id, recipe_spec}} label="Product Item">
+    <%= if recipe_spec.product_item do %>
+      <%= recipe_spec.product_item.name %>
+    <% else %>
+      <span class="text-gray-500">-</span>
+    <% end %>
+  </:col>
+  <:col :let={{_id, recipe_spec}} label="Media"><%= recipe_spec.media %></:col>
+  <:col :let={{_id, recipe_spec}} label="Production Fee"><%= recipe_spec.production_fee %></:col>
+  <:col :let={{_id, recipe_spec}} label="Production Amount"><%= recipe_spec.production_amount %></:col>
+  <:col :let={{_id, recipe_spec}} label="Wages"><%= recipe_spec.wages %></:col>
+  <:col :let={{_id, recipe_spec}} label="Workload"><%= recipe_spec.workload %></:col>
+
+  <:action :let={{_id, recipe_spec}}>
+    <div class="sr-only">
+      <.link navigate={~p"/gersang/recipe_specs/#{recipe_spec}"}>Show</.link>
+    </div>
+    <.link patch={~p"/gersang/recipe_specs/#{recipe_spec}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, recipe_spec}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: recipe_spec.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="recipe_spec-modal" show on_cancel={JS.patch(~p"/gersang/recipe_specs")}>
+  <.live_component
+    module={GersangDbWeb.RecipeSpecLive.FormComponent}
+    id={@recipe_spec.id || :new}
+    title={@page_title}
+    action={@live_action}
+    recipe_spec={@recipe_spec}
+    patch={~p"/gersang/recipe_specs"}
+  />
+</.modal>

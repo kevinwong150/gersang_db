@@ -36,9 +36,6 @@ defmodule GersangDbWeb.GersangItemLive.FormComponent do
         <.input field={@form[:margin]} type="number" label="Margin" step="any" />
         <.input field={@form[:market_price]} type="number" label="Market Price" />
         <.input field={@form[:cost_per]} type="number" label="Cost Per" step="any" />
-        <.input field={@form[:artisan_product?]} type="checkbox" label="Artisan Product?" />
-        <.input field={@form[:artisan_production_amount]} type="number" label="Artisan Production Amount" />
-        <.input field={@form[:artisan_production_fee]} type="number" label="Artisan Production Fee" />
 
         <:actions>
           <.button phx-disable-with="Saving...">Save Gersang item</.button>

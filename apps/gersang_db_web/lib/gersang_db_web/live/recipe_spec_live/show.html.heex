@@ -1,0 +1,37 @@
+<.header>
+  Recipe Spec <%= @recipe_spec.id %>
+  <:subtitle>This is a recipe spec record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/gersang/recipe_specs/#{@recipe_spec}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit Recipe Spec</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Product Item">
+    <%= if @recipe_spec.product_item do %>
+      <%= @recipe_spec.product_item.name %>
+    <% else %>
+      <span class="text-gray-500">-</span>
+    <% end %>
+  </:item>
+  <:item title="Media"><%= @recipe_spec.media %></:item>
+  <:item title="Production Fee"><%= @recipe_spec.production_fee %></:item>
+  <:item title="Production Amount"><%= @recipe_spec.production_amount %></:item>
+  <:item title="Wages"><%= @recipe_spec.wages %></:item>
+  <:item title="Workload"><%= @recipe_spec.workload %></:item>
+</.list>
+
+<.back navigate={~p"/gersang/recipe_specs"}>Back to recipe specs</.back>
+
+<.modal :if={@live_action == :edit} id="recipe_spec-modal" show on_cancel={JS.patch(~p"/gersang/recipe_specs/#{@recipe_spec}")}>
+  <.live_component
+    module={GersangDbWeb.RecipeSpecLive.FormComponent}
+    id={@recipe_spec.id}
+    title={@page_title}
+    action={@live_action}
+    recipe_spec={@recipe_spec}
+    patch={~p"/gersang/recipe_specs/#{@recipe_spec}"}
+  />
+</.modal>

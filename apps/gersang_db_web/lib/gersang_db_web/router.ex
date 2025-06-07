@@ -34,6 +34,12 @@ defmodule GersangDbWeb.Router do
     # live "/gersang/recipes/:id/edit", RecipeLive.Index, :edit
     # live "/gersang/recipes/:id", RecipeLive.Show, :show
 
+    live "/gersang/recipe_specs", RecipeSpecLive.Index, :index
+    live "/gersang/recipe_specs/new", RecipeSpecLive.Index, :new
+    live "/gersang/recipe_specs/:id/edit", RecipeSpecLive.Index, :edit
+    live "/gersang/recipe_specs/:id", RecipeSpecLive.Show, :show
+    live "/gersang/recipe_specs/:id/show/edit", RecipeSpecLive.Show, :edit
+
     live "/gersang/damage_calculator", DamageCalculatorLive, :index
   end
 

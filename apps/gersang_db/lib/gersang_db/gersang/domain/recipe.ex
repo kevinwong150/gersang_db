@@ -4,7 +4,6 @@ defmodule GersangDb.Domain.Recipe do
   alias GersangDb.Domain.GersangItem
 
   schema "recipes" do
-    field :media, :string
     field :material_amount, :integer, default: 1
 
     belongs_to :product_item, GersangItem, foreign_key: :product_item_id
@@ -16,7 +15,7 @@ defmodule GersangDb.Domain.Recipe do
   @doc false
   def changeset(recipe, attrs) do
     recipe
-    |> cast(attrs, [:media, :product_item_id, :material_item_id, :material_amount])
+    |> cast(attrs, [:product_item_id, :material_item_id, :material_amount])
     |> validate_required([:product_item_id, :material_item_id, :material_amount])
     |> foreign_key_constraint(:product_item_id)
     |> foreign_key_constraint(:material_item_id)

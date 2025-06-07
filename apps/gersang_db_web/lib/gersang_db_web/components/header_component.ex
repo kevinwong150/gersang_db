@@ -17,13 +17,20 @@ defmodule GersangDbWeb.HeaderComponent do
               >
                 Items
               </.link>
-            </li>
-            <li>
+            </li>            <li>
               <.link
                 href={~p"/gersang/recipes"}
                 class="text-theme-secondary-light hover:text-theme-secondary-light"
               >
                 Recipes
+              </.link>
+            </li>
+            <li>
+              <.link
+                href={~p"/gersang/recipe_specs"}
+                class="text-theme-secondary-light hover:text-theme-secondary-light"
+              >
+                Recipe Specs
               </.link>
             </li>
             <li>
