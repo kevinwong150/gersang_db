@@ -20,6 +20,12 @@
   <p class="text-red-500">Recipe not found.</p>
 </div>
 
+<.live_component
+  module={GersangDbWeb.RecipeLive.RecipesCostCalculator}
+  id={"recipes-calculator"}
+  product={@product}
+/>
+
 <.back navigate={~p"/gersang/recipes"}>Back to recipes</.back>
 
 <.modal :if={@live_action == :edit && @grouped_recipe} id="recipe-modal" show on_cancel={JS.patch(~p"/gersang/recipes/#{@grouped_recipe.product.id}/#{@grouped_recipe.by_media |> List.first() |> Map.get(:media)}")}>

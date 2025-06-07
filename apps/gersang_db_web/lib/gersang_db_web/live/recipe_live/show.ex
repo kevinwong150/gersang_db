@@ -14,6 +14,8 @@ defmodule GersangDbWeb.RecipeLive.Show do
     all_items = GersangItem.list_items()
     gersang_item_options = Enum.map(all_items, fn item -> {item.name, item.id} end)
 
+    product = GersangItem.get_item!(String.to_integer(product_id))
+
     target_product_id = String.to_integer(product_id)
 
     grouped_recipes = RecipeIndex.build_grouped_recipe(all_recipes, target_product_id)
@@ -23,6 +25,7 @@ defmodule GersangDbWeb.RecipeLive.Show do
       |> assign(:page_title, page_title(grouped_recipes))
       |> assign(:grouped_recipe, grouped_recipes)
       |> assign(:gersang_item_options, gersang_item_options)
+      |> assign(:product, product)
       |> assign(:live_action, :show)
 
     {:ok, socket}

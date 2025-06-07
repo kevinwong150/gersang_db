@@ -1,0 +1,24 @@
+<div class="p-4 border rounded-lg shadow-md bg-white">
+  <!-- Recipes Cost Calculator -->
+  <h3 class="text-lg font-semibold mb-4">Recipe Cost Calculator</h3>
+
+  <div>
+    <%= if @materials_tree && map_size(@materials_tree) > 0 && @materials_tree["0"] do %>
+      <div class="materials-tree-container p-3 border border-gray-200 rounded-lg bg-gray-50 shadow">        <%= for root_node <- @materials_tree["0"] do %>
+          <.material_tree_node
+            target_handler={@myself}
+            expanded_nodes={@expanded_nodes}
+            node={root_node}
+            layer_index={0}
+            all_nodes={@materials_tree}
+            highlighted_item_id={@highlighted_item_id}
+            related_item_ids={@related_item_ids}
+            ingredient_costs={@ingredient_costs}
+          />
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-gray-500">No material tree data to display. Please ensure <code>@materials_tree</code> is assigned correctly.</p>
+    <% end %>
+  </div>
+</div>

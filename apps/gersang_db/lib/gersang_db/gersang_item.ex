@@ -101,4 +101,17 @@ defmodule GersangDb.GersangItem do
   def change_item(%GersangItem{} = gersang_item, attrs \\ %{}) do
     GersangItem.changeset(gersang_item, attrs)
   end
+
+  def preload_material(%{materials: []} = gersang_item) do
+    gersang_item
+  end
+
+  def preload_material(gersang_item) do
+    gersang_item
+    |> Repo.preload(:materials)
+    |> then(fn item ->
+      item
+      |> Map.put(:materials, Enum.map(item.materials, &preload_material(&1)))
+    end)
+  end
 end
