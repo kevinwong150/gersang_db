@@ -38,6 +38,23 @@ defmodule GersangDb.GersangItem do
   def get_item!(id), do: Repo.get!(GersangItem, id)
 
   @doc """
+  Gets a single gersang_item by its name.
+
+  Returns `nil` if the Gersang item does not exist.
+
+  ## Examples
+
+      iex> get_item_by_name("Sealed Power Piece")
+      %GersangItem{}
+
+      iex> get_item_by_name("Non Existent Item")
+      nil
+  """
+  def get_item_by_name(name) do
+    Repo.get_by(GersangItem, name: name)
+  end
+
+  @doc """
   Creates a gersang_item.
 
   ## Examples

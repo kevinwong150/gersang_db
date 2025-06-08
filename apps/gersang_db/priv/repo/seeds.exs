@@ -11,170 +11,47 @@
 # and so on) as they will fail if something goes wrong.
 
 gersang_item_attrs = [
-  %{
-    name: "Sealed Power Piece",
-    market_price: 1600000
-  },
-  %{
-    name: "Sealed Power Shard",
-    market_price: 17000000
-  },
-  %{
-    name: "Yellow Force Stone",
-    market_price: 1300000
-  },
-  %{
-    name: "Red Force Stone",
-    market_price: 8000
-  },
-  %{
-    name: "Blue Force Stone",
-    market_price: 50000
-  },
-  %{
-    name: "Moon Seal",
-    market_price: 8000000
-  },
-  %{
-    name: "Sun Seal",
-    market_price: 5000000
-  },
-  %{
-    name: "Force of Deities(Thunder)",
-    market_price: 35000000
-  },
-  %{
-    name: "Force of Deities(Earth)",
-    market_price: 35000000
-  },
-  %{
-    name: "Force of Deities(Wind)",
-    market_price: 35000000
-  },
-  %{
-    name: "Force of Deities(Water)",
-    market_price: 35000000
-  },
-  %{
-    name: "Force of Deities(Flame)",
-    market_price: 35000000
-  },
-  %{
-    name: "Piece of Deities(Thunder)",
-    market_price: 850_000
-  },
-  %{
-    name: "Piece of Deities(Earth)",
-    market_price: 890_000
-  },
-  %{
-    name: "Piece of Deities(Wind)",
-    market_price: 1_400_000
-  },
-  %{
-    name: "Piece of Deities(Water)",
-    market_price: 1_980_000
-  },
-  %{
-    name: "Piece of Deities(Flame)",
-    market_price: 3_000_000
-  },
-  %{
-    name: "Small Elemental Stone of Flame",
-    market_price: 940_000
-  },
-  %{
-    name: "Small Elemental Stone of Water",
-    market_price: 850_000
-  },
-  %{
-    name: "Small Elemental Stone of Wind",
-    market_price: 790_000
-  },
-  %{
-    name: "Small Elemental Stone of Thunder",
-    market_price: 850_000
-  },
-  %{
-    name: "Small Elemental Stone of Earth",
-    market_price: 8_500_000
-  },
-  %{
-    name: "Force Beads(Flame)",
-    market_price: 0
-  },
-  %{
-    name: "Force Beads(Water)",
-    market_price: 0
-  },
-  %{
-    name: "Force Beads(Wind)",
-    market_price: 0
-  },
-  %{
-    name: "Force Beads(Thunder)",
-    market_price: 0
-  },
-  %{
-    name: "Force Beads(Earth)",
-    market_price: 0
-  },
-  %{
-    name: "Fragmented Force Beads(Flame)",
-    market_price: 2900000
-  },
-  %{
-    name: "Fragmented Force Beads(Water)",
-    market_price: 2_800_000
-  },
-  %{
-    name: "Fragmented Force Beads(Wind)",
-    market_price: 275_000
-  },
-  %{
-    name: "Fragmented Force Beads(Thunder)",
-    market_price: 1200000
-  },
-  %{
-    name: "Fragmented Force Beads(Earth)",
-    market_price: 500000
-  },
-  %{
-    name: "Flame Stone",
-    market_price: 1000000
-  },
-  %{
-    name: "Frozen Stone",
-    market_price: 1000000
-  },
-  %{
-    name: "maple stone",
-    market_price: 1000000
-  },
-  %{
-    name: "Thunder Soul Stone",
-    market_price: 1000000
-  },
-  %{
-    name: "Earth specter stone",
-    market_price: 500000
-  },
-  %{
-    name: "Flame specter stone",
-    market_price: 4000000
-  },
-  %{
-    name: "Water specter stone",
-    market_price: 2000000
-  },
-  %{
-    name: "Wind specter stone",
-    market_price: 2000000
-  },
-  %{
-    name: "Thunder specter stone",
-    market_price: 2000000
-  },
+  %{name: "Sealed Power Piece", market_price: 1600000},
+  %{name: "Sealed Power Shard", market_price: 17000000},
+  %{name: "Yellow Force Stone", market_price: 1300000},
+  %{name: "Red Force Stone", market_price: 8000},
+  %{name: "Blue Force Stone", market_price: 50000},
+  %{name: "Moon Seal", market_price: 8000000},
+  %{name: "Sun Seal", market_price: 5000000},
+  %{name: "Force of Deities(Thunder)", market_price: 35000000},
+  %{name: "Force of Deities(Earth)", market_price: 35000000},
+  %{name: "Force of Deities(Wind)", market_price: 35000000},
+  %{name: "Force of Deities(Water)", market_price: 35000000},
+  %{name: "Force of Deities(Flame)", market_price: 35000000},
+  %{name: "Piece of Deities(Thunder)", market_price: 850_000},
+  %{name: "Piece of Deities(Earth)", market_price: 890_000},
+  %{name: "Piece of Deities(Wind)", market_price: 1_400_000},
+  %{name: "Piece of Deities(Water)", market_price: 1_980_000},
+  %{name: "Piece of Deities(Flame)", market_price: 3_000_000},
+  %{name: "Small Elemental Stone of Flame", market_price: 940_000},
+  %{name: "Small Elemental Stone of Water", market_price: 850_000},
+  %{name: "Small Elemental Stone of Wind", market_price: 790_000},
+  %{name: "Small Elemental Stone of Thunder", market_price: 850_000},
+  %{name: "Small Elemental Stone of Earth", market_price: 8_500_000},
+  %{name: "Force Beads(Flame)", market_price: 0},
+  %{name: "Force Beads(Water)", market_price: 0},
+  %{name: "Force Beads(Wind)", market_price: 0},
+  %{name: "Force Beads(Thunder)", market_price: 0},
+  %{name: "Force Beads(Earth)", market_price: 0},
+  %{name: "Fragmented Force Beads(Flame)", market_price: 2900000},
+  %{name: "Fragmented Force Beads(Water)", market_price: 2_800_000},
+  %{name: "Fragmented Force Beads(Wind)", market_price: 275_000},
+  %{name: "Fragmented Force Beads(Thunder)", market_price: 1200000},
+  %{name: "Fragmented Force Beads(Earth)", market_price: 500000},
+  %{name: "Flame Stone", market_price: 1000000},
+  %{name: "Frozen Stone", market_price: 1000000},
+  %{name: "maple stone", market_price: 1000000},
+  %{name: "Thunder Soul Stone", market_price: 1000000},
+  %{name: "Earth specter stone", market_price: 500000},
+  %{name: "Flame specter stone", market_price: 4000000},
+  %{name: "Water specter stone", market_price: 2000000},
+  %{name: "Wind specter stone", market_price: 2000000},
+  %{name: "Thunder specter stone", market_price: 2000000},
   %{name: "Wolfporia", market_price: 60000},
   %{name: "Honeysuckle", market_price: 30000},
   %{name: "Thousand Year Lake Plant", market_price: 60000},
@@ -219,7 +96,7 @@ gersang_item_attrs = [
   %{name: "White Powder", market_price: 300000},
   %{name: "Blue Powder", market_price: 700000},
   %{name: "Obsidian Ring", market_price: 500000},
-  %{name: "Zhuge Liang\'s Ring", market_price: 280000000},
+  %{name: "Zhuge Liang's Ring", market_price: 280000000},
   %{name: "Demon Ring", market_price: 350000000},
   %{name: "Five color Crystal", market_price: 0},
   %{name: "Powered Bloodstone", market_price: 68000000},
@@ -242,4 +119,41 @@ gersang_item_attrs = [
 
 Enum.map(gersang_item_attrs, fn attr ->
   GersangDb.GersangItem.create_item(attr)
+end)
+
+recipe_spec_attrs = [
+  %{name: "White Powder", production_fee: 10000, production_amount: 20, media: "Alchemist"},
+  %{name: "Gold Powder", production_fee: 50000, production_amount: 20, media: "Alchemist"},
+  %{name: "Blue Powder", production_fee: 300000, production_amount: 20, media: "Alchemist"},
+  %{name: "Tranquilizer", production_fee: 1000000, production_amount: 5, media: "Alchemist"},
+  %{name: "Polish Powder", production_fee: 1000000, production_amount: 5, media: "Alchemist"},
+  %{name: "Black Powder", production_fee: 1000000, production_amount: 20, media: "Alchemist"},
+  %{name: "Red Powder", production_fee: 2500000, production_amount: 10, media: "Alchemist"},
+  %{name: "Five color powder", production_fee: 500000, production_amount: 10, media: "Alchemist"},
+  %{name: "White Crystal", production_fee: 50000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Goldstone", production_fee: 50000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Fisheye", production_fee: 50000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Obsidian", production_fee: 300000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Bloodstone", production_fee: 300000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Carved White Crystal", production_fee: 1000000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Carved Goldstone", production_fee: 2000000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Carved Fisheye", production_fee: 2000000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Carved Obsidian", production_fee: 5000000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Carved Bloodstone", production_fee: 5000000, production_amount: 5, media: "Metallurgist"},
+  %{name: "Powered White Crystal", production_fee: 10000000, production_amount: 1, media: "Metallurgist"},
+  %{name: "Powered Goldstone", production_fee: 10000000, production_amount: 1, media: "Metallurgist"},
+  %{name: "Powered Fisheye", production_fee: 20000000, production_amount: 1, media: "Metallurgist"},
+  %{name: "Powered Obsidian", production_fee: 20000000, production_amount: 1, media: "Metallurgist"},
+  %{name: "Powered Bloodstone", production_fee: 30000000, production_amount: 1, media: "Metallurgist"},
+  %{name: "Demon Ring", production_fee: 30000000, production_amount: 1, media: "Metallurgist"},
+  %{name: "Zhuge Liang's Ring", production_fee: 30000000, production_amount: 1, media: "Metallurgist"}
+]
+
+Enum.map(recipe_spec_attrs, fn attr ->
+  product_item = GersangDb.GersangItem.get_item_by_name(attr.name)
+  if is_nil(product_item) do
+    raise "Product item not found for recipe spec: #{attr.name}"
+  end
+  attr = Map.put(attr, :product_item_id, product_item.id)
+  GersangDb.RecipeSpecs.create_recipe_spec(attr)
 end)
