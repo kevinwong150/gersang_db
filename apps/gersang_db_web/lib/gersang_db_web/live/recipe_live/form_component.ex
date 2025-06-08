@@ -213,7 +213,9 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
   end
 
   @impl true
-  def handle_event("validate", %{"embedded_recipe" => embedded_recipe_params}, socket) do
+  def handle_event("validate", %{"embedded_recipe" => embedded_recipe_params}, socket)
+      when is_map(embedded_recipe_params) and map_size(embedded_recipe_params) > 1 do
+    # Handle full form validation when multiple fields are present
     all_gersang_items = socket.assigns.all_gersang_items
     current_embedded_recipe = socket.assigns.form.data
 
@@ -286,19 +288,43 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
       "product_item" => product_item_attrs,
       "material_items" => material_items_attrs_list
     }
-    |> IO.inspect(label: "Attrs for changeset")
 
     changeset =
       EmbeddedRecipe.changeset(current_embedded_recipe, attrs_for_changeset)
       |> Map.put(:action, :validate)
-      |> IO.inspect(label: "Changeset after validation")
 
     {:noreply, assign_form(socket, changeset)}
   end
 
   @impl true
+  def handle_event("validate", %{"embedded_recipe" => %{"recipe_spec_id" => recipe_spec_id}}, socket) do
+    # Handle recipe_spec_id field validation from SearchSelectComponent
+    current_form = socket.assigns.form
+    current_params = form_to_params(current_form)
+
+    # Update only the recipe_spec_id field
+    updated_params = put_in(current_params, ["embedded_recipe", "recipe_spec_id"], recipe_spec_id)
+
+    # Call the main validation handler
+    handle_event("validate", updated_params, socket)
+  end
+
+  @impl true
+  def handle_event("validate", %{"embedded_recipe" => %{"product_item_id" => product_item_id}}, socket) do
+    # Handle product_item_id field validation from SearchSelectComponent
+    current_form = socket.assigns.form
+    current_params = form_to_params(current_form)
+
+    # Update only the product_item_id field
+    updated_params = put_in(current_params, ["embedded_recipe", "product_item_id"], product_item_id)
+
+    # Call the main validation handler
+    handle_event("validate", updated_params, socket)
+  end
+
+  @impl true
   def handle_event("validate", params, socket) when not is_map_key(params, "embedded_recipe") do
-    # Handle individual field validations from SearchSelectComponent
+    # Handle individual field validations from SearchSelectComponent for material items
     # Convert params like %{"embedded_recipe[material_items][0]" => %{"material_item_id" => "1"}}
     # to nested format and merge with existing form data for consistency
 
@@ -320,7 +346,6 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
 
     # Deep merge the new field params with existing form data
     merged_params = deep_merge(current_params, nested_field_params)
-    |> IO.inspect(label: "Merged Params")
 
     # Call the main validation handler with the merged params
     handle_event("validate", merged_params, socket)
