@@ -48,13 +48,41 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:recipe_spec_id]} type="select" label="Recipe Spec" options={@recipe_spec_options} required />
-        <.input field={@form[:product_item_id]} type="select" label="Product Item" options={@gersang_item_options} required />
+        <.live_component
+          module={GersangDbWeb.Component.SearchSelectComponent}
+          id="recipe-spec-search"
+          form={@form}
+          field={:recipe_spec_id}
+          label="Recipe Spec"
+          options={@recipe_spec_search_options}
+          placeholder="Search for recipe spec..."
+          target_handler={@myself}
+        />
+
+        <.live_component
+          module={GersangDbWeb.Component.SearchSelectComponent}
+          id="product-item-search"
+          form={@form}
+          field={:product_item_id}
+          label="Product Item"
+          options={@gersang_item_options}
+          placeholder="Search for product item..."
+          target_handler={@myself}
+        />
 
         <.inputs_for :let={material_form} field={@form[:material_items]}>
           <div class="flex items-center gap-2 mb-2">
+            <.live_component
+              module={GersangDbWeb.Component.SearchSelectComponent}
+              id={"material-item-id-search-#{material_form.index}"}
+              form={material_form}
+              field={:material_item_id}
+              label={"Material #{material_form.index + 1}"}
+              options={@gersang_item_options}
+              placeholder={"Search for mateiral #{material_form.index + 1}..."}
+              target_handler={@myself}
+            />
 
-            <.input field={material_form[:material_item_id]} type="select" label={"Material #{material_form.index + 1}"} options={@gersang_item_options} required />
             <.input field={material_form[:material_amount]} value={material_form[:material_amount].value || 5} type="number" label="Amount" required />
 
             <.button
@@ -97,6 +125,12 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
       {label, recipe_spec.id}
     end)
 
+    # Prepare search options as {label, value} tuples for the SearchSelectComponent
+    recipe_spec_search_options = Enum.map(all_recipe_specs, fn recipe_spec ->
+      label = "#{recipe_spec.product_item.name} - #{recipe_spec.media}"
+      {label, recipe_spec.id}
+    end)
+
     initial_changeset_attrs =
       cond do
         (recipes_list = assigns[:gersang_recipes]) && is_list(recipes_list) && !Enum.empty?(recipes_list) ->
@@ -134,6 +168,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
 
               if material_item_struct do
                 Map.from_struct(material_item_struct)
+                |> Map.put(:material_item_id, recipe.material_item_id)
                 |> Map.put(:material_amount, recipe.material_amount)
               else
                 nil
@@ -171,6 +206,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
      |> assign(:all_gersang_items, all_gersang_items)
      |> assign(:gersang_item_options, gersang_item_options)
      |> assign(:recipe_spec_options, recipe_spec_options)
+     |> assign(:recipe_spec_search_options, recipe_spec_search_options)
      |> assign(:original_product_item_id, original_product_item_id)
      |> assign(:original_recipe_spec_id, original_recipe_spec_id)
      |> assign_form(form_changeset)}
@@ -181,55 +217,63 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
     all_gersang_items = socket.assigns.all_gersang_items
     current_embedded_recipe = socket.assigns.form.data
 
-    product_item_id_str = embedded_recipe_params["product_item_id"]
+    product_item_id = embedded_recipe_params["product_item_id"]
 
     product_item_attrs =
-      case product_item_id_str do
-        nil -> nil
-        "" -> nil
-        id_str ->
-          case Integer.parse(id_str) do
+      case product_item_id do
+        id when id in [nil, ""] -> nil
+        id when is_binary(id) ->
+          case Integer.parse(id) do
             {parsed_id, _} ->
               found_item = Enum.find(all_gersang_items, &(&1.id == parsed_id))
               if found_item, do: Map.from_struct(found_item), else: nil
             :error ->
               nil
           end
+        id when is_integer(id) ->
+          found_item = Enum.find(all_gersang_items, &(&1.id == id))
+          if found_item, do: Map.from_struct(found_item), else: nil
+        _ -> nil
       end
 
     material_items_params = embedded_recipe_params["material_items"] || %{}
 
+    # Handle both map and list formats for material_items_params
+    material_items_list =
+      case material_items_params do
+        map when is_map(map) -> Map.values(map)
+        list when is_list(list) -> list
+        _ -> []
+      end
+
     material_items_attrs_list =
-      material_items_params
-      |> Map.values()
+      material_items_list
       |> Enum.map(fn item_params ->
-        material_item_id_str = item_params["material_item_id"]
-        amount_str = item_params["material_amount"]
+        material_item_id = item_params["material_item_id"] || item_params[:material_item_id]
+        amount = item_params["material_amount"] || item_params[:material_amount]
 
         item_base_attrs =
-          case material_item_id_str do
+          case material_item_id do
             nil -> nil
             "" -> nil
-            id_str ->
-              case Integer.parse(id_str) do
+            id when is_binary(id) ->
+              case Integer.parse(id) do
                 {parsed_id, _} ->
                   found_item = Enum.find(all_gersang_items, &(&1.id == parsed_id))
                   if found_item, do: Map.from_struct(found_item), else: nil
                 :error ->
                   nil
               end
+            id when is_integer(id) ->
+              found_item = Enum.find(all_gersang_items, &(&1.id == id))
+              if found_item, do: Map.from_struct(found_item), else: nil
+            _ -> nil
           end
 
         if item_base_attrs do
-          amount =
-            case Integer.parse(amount_str || "") do
-              {val, ""} -> val
-              _ -> nil
-            end
-
           item_base_attrs
           |> Map.put(:material_amount, amount)
-          |> Map.put(:material_item_id, Integer.parse(material_item_id_str))
+          |> Map.put(:material_item_id, material_item_id)
         else
           nil
         end
@@ -238,34 +282,55 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
 
     attrs_for_changeset = %{
       "recipe_spec_id" => embedded_recipe_params["recipe_spec_id"],
-      "product_item_id" => product_item_id_str,
+      "product_item_id" => product_item_id,
       "product_item" => product_item_attrs,
       "material_items" => material_items_attrs_list
     }
+    |> IO.inspect(label: "Attrs for changeset")
 
     changeset =
       EmbeddedRecipe.changeset(current_embedded_recipe, attrs_for_changeset)
       |> Map.put(:action, :validate)
+      |> IO.inspect(label: "Changeset after validation")
 
     {:noreply, assign_form(socket, changeset)}
   end
 
+  @impl true
+  def handle_event("validate", params, socket) when not is_map_key(params, "embedded_recipe") do
+    # Handle individual field validations from SearchSelectComponent
+    # Convert params like %{"embedded_recipe[material_items][0]" => %{"material_item_id" => "1"}}
+    # to nested format and merge with existing form data for consistency
+
+    # Get current form data to merge with new field updates
+    current_form = socket.assigns.form
+    current_params = form_to_params(current_form)
+
+    # Convert individual field params to nested format
+    nested_field_params =
+      params
+      |> Enum.reduce(%{}, fn {key, value}, acc ->
+        case parse_nested_key(key) do
+          {:ok, nested_structure} ->
+            put_in_nested(acc, nested_structure, value)
+          :error ->
+            acc
+        end
+      end)
+
+    # Deep merge the new field params with existing form data
+    merged_params = deep_merge(current_params, nested_field_params)
+    |> IO.inspect(label: "Merged Params")
+
+    # Call the main validation handler with the merged params
+    handle_event("validate", merged_params, socket)
+  end
+
+  @impl true
   def handle_event("save", %{"embedded_recipe" => recipe_params}, socket) do
-    recipe_spec_id_str = recipe_params["recipe_spec_id"]
-    product_item_id_str = recipe_params["product_item_id"]
+    recipe_spec_id = recipe_params["recipe_spec_id"]
+    product_item_id = recipe_params["product_item_id"]
     material_items_map = recipe_params["material_items"] || %{}
-
-    recipe_spec_id =
-      case Integer.parse(recipe_spec_id_str || "") do
-        {id, ""} -> id
-        _ -> nil
-      end
-
-    product_item_id =
-      case Integer.parse(product_item_id_str || "") do
-        {id, ""} -> id
-        _ -> nil
-      end
 
     if is_nil(recipe_spec_id) do
       {:noreply, put_flash(socket, :error, "Invalid Recipe Spec ID. Please select a recipe spec.") |> assign_form(socket.assigns.form.source)}
@@ -279,19 +344,15 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
         material_items_map
         |> Map.values()
         |> Enum.map(fn material_param ->
-          material_item_id_str = material_param["material_item_id"]
-          amount_str = material_param["material_amount"]
+          material_item_id = material_param["material_item_id"] || material_param[:material_item_id]
+          amount = material_param["material_amount"] || material_param[:material_amount]
 
-          case {Integer.parse(material_item_id_str), Integer.parse(amount_str)} do
-            {{mat_id, ""}, {amount, ""}} ->
-              %{
-                "recipe_spec_id" => recipe_spec_id,
-                "product_item_id" => product_item_id,
-                "material_item_id" => mat_id,
-                "material_amount" => amount
-              }
-            _ -> nil
-          end
+          %{
+            "recipe_spec_id" => recipe_spec_id,
+            "product_item_id" => product_item_id,
+            "material_item_id" => material_item_id,
+            "material_amount" => amount
+          }
         end)
         |> Enum.reject(&is_nil/1)
 
@@ -391,4 +452,82 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+
+  # Helper function to parse nested form field names like "embedded_recipe[material_items][0]"
+  defp parse_nested_key(key) do
+    case String.split(key, ~r/\[|\]/, trim: true) do
+      [base | indices] when base in ["embedded_recipe"] ->
+        {:ok, [base | indices]}
+      _ ->
+        :error
+    end
+  end
+
+  # Helper function to put a value in a nested structure
+  defp put_in_nested(map, [], value), do: value
+  defp put_in_nested(map, [key], value) do
+    Map.put(map, key, value)
+  end
+  defp put_in_nested(map, [key | rest], value) do
+    current = Map.get(map, key, %{})
+    Map.put(map, key, put_in_nested(current, rest, value))
+  end
+
+  # Helper function to convert form data back to params format for merging
+  defp form_to_params(form) do
+    changeset = form.source
+
+    # Extract current data from the changeset
+    recipe_spec_id = Ecto.Changeset.get_field(changeset, :recipe_spec_id)
+    product_item_id = Ecto.Changeset.get_field(changeset, :product_item_id)
+    product_item = Ecto.Changeset.get_field(changeset, :product_item)
+    material_items = Ecto.Changeset.get_field(changeset, :material_items) || []
+
+    # Convert product_item struct to params if present
+    product_item_params =
+      if product_item && is_struct(product_item) do
+        Map.from_struct(product_item)
+        |> Map.drop([:__meta__, :__struct__])
+      else
+        product_item
+      end
+
+    # Convert material_items to indexed map format
+    material_items_params =
+      material_items
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {item, index}, acc ->
+        item_params =
+          if is_struct(item) do
+            Map.from_struct(item)
+            |> Map.drop([:__meta__, :__struct__])
+          else
+            item || %{}
+          end
+        Map.put(acc, to_string(index), item_params)
+      end)
+
+    %{
+      "embedded_recipe" => %{
+        "recipe_spec_id" => recipe_spec_id,
+        "product_item_id" => product_item_id,
+        "product_item" => product_item_params,
+        "material_items" => material_items_params
+      }
+    }
+  end
+
+  # Helper function to deep merge two maps
+  defp deep_merge(left, right) do
+    Map.merge(left, right, fn _key, left_val, right_val ->
+      case {left_val, right_val} do
+        {left_map, right_map} when is_map(left_map) and is_map(right_map) ->
+          deep_merge(left_map, right_map)
+        {_left, right} ->
+          right
+      end
+    end)
+  end
+
+  # Helper functions for options handling
 end
