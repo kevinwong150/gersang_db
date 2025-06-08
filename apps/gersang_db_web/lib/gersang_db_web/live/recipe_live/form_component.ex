@@ -16,6 +16,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
       embeds_one :product_item, GersangItem
       embeds_many :material_items, GersangItem do
         field :material_amount, :integer
+        field :material_item_id, :integer, virtual: true
       end
       field :product_item_id, :integer, virtual: true
     end
@@ -25,11 +26,8 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
       |> cast(attrs, [:recipe_spec_id, :product_item_id])
       |> cast_embed(:product_item, with: &GersangItemDomain.changeset/2, required: true)
       |> cast_embed(:material_items, with: fn item_struct, params_for_item ->
-           # item_struct is a %GersangItem{} that also has a :material_amount field.
-           # params_for_item contains "id" (for the GersangItem) and "material_amount".
-           # We cast :id to associate the correct GersangItem and :material_amount for its quantity in the recipe.
-           Ecto.Changeset.cast(item_struct, params_for_item, [:material_amount])
-           |> Ecto.Changeset.validate_required([:material_amount])
+           Ecto.Changeset.cast(item_struct, params_for_item, [:material_amount, :material_item_id])
+           |> Ecto.Changeset.validate_required([:material_amount, :material_item_id])
          end, required: true)
       |> validate_required([:recipe_spec_id])
     end
@@ -56,7 +54,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
         <.inputs_for :let={material_form} field={@form[:material_items]}>
           <div class="flex items-center gap-2 mb-2">
 
-            <.input field={material_form[:id]} type="select" label={"Material #{material_form.index + 1}"} options={@gersang_item_options} required />
+            <.input field={material_form[:material_item_id]} type="select" label={"Material #{material_form.index + 1}"} options={@gersang_item_options} required />
             <.input field={material_form[:material_amount]} value={material_form[:material_amount].value || 5} type="number" label="Amount" required />
 
             <.button
@@ -205,7 +203,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
       material_items_params
       |> Map.values()
       |> Enum.map(fn item_params ->
-        material_item_id_str = item_params["id"]
+        material_item_id_str = item_params["material_item_id"]
         amount_str = item_params["material_amount"]
 
         item_base_attrs =
@@ -228,7 +226,10 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
               {val, ""} -> val
               _ -> nil
             end
-          Map.put(item_base_attrs, :material_amount, amount)
+
+          item_base_attrs
+          |> Map.put(:material_amount, amount)
+          |> Map.put(:material_item_id, Integer.parse(material_item_id_str))
         else
           nil
         end
@@ -278,7 +279,7 @@ defmodule GersangDbWeb.RecipeLive.FormComponent do
         material_items_map
         |> Map.values()
         |> Enum.map(fn material_param ->
-          material_item_id_str = material_param["id"]
+          material_item_id_str = material_param["material_item_id"]
           amount_str = material_param["material_amount"]
 
           case {Integer.parse(material_item_id_str), Integer.parse(amount_str)} do
