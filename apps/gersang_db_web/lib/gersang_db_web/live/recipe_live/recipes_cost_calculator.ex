@@ -598,6 +598,18 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
           %{name: child_item.name, total_price: total_cost, item_id: child_item.id, amount: amount || 1}
         end)
         |> Enum.filter(fn %{total_price: price} -> price > 0 end)
+        # Group by item_id and sum up the total_price and amount for duplicates
+        |> Enum.group_by(fn %{item_id: item_id} -> item_id end)
+        |> Enum.map(fn {_item_id, materials} ->
+          # Sum up amounts and total_price for the same item
+          total_amount = Enum.reduce(materials, 0, fn %{amount: amount}, acc -> acc + amount end)
+          total_price = Enum.reduce(materials, 0, fn %{total_price: price}, acc -> acc + price end)
+
+          # Take the name from the first material (they should all be the same)
+          %{name: name, item_id: item_id} = List.first(materials)
+
+          %{name: name, total_price: total_price, item_id: item_id, amount: total_amount}
+        end)
 
       case materials_for_costing do
         [] when production_fee == 0 ->
