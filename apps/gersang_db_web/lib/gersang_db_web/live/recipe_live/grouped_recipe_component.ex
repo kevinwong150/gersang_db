@@ -8,27 +8,67 @@ defmodule GersangDbWeb.RecipeLive.GroupedRecipeComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="bg-gradient-to-br from-white to-slate-50 shadow-lg border border-slate-200 rounded-xl p-8 transition-shadow hover:shadow-xl">
-      <!-- Product Header -->
-      <div class="mb-6">
-        <h2 class="text-2xl font-bold text-slate-800 mb-3 flex items-center gap-3">
-          <span class="inline-flex items-center bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-full text-lg font-semibold shadow-md">
-            🏭 <%= @grouped_recipe.product.name %>
-          </span>
-        </h2>
-      </div>
+    <div class="bg-gradient-to-br from-white to-slate-50 shadow-lg border border-slate-200 rounded-xl p-8 transition-shadow hover:shadow-xl">      <!-- Product Header with Cost and Margin Info -->
+      <div class="mb-6">        <div class="bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div class="flex flex-wrap items-center gap-4">
+            <!-- Product Name -->
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-full text-lg font-semibold shadow-md">
+                🏭 <%= @grouped_recipe.product.name %>
+              </span>
+            </div>
 
-      <!-- Total Cost Section -->
-      <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4 mb-6 shadow-sm">
-        <div class="flex flex-col md:flex-row md:items-center md:gap-6">
-          <div class="flex items-center gap-2 font-semibold text-amber-800 w-36">
-            💰 <span>Total Cost:</span>
-          </div>
-          <div class="text-amber-900 font-mono text-lg font-bold bg-white/70 px-3 py-1 rounded-md">
-            <%= @grouped_recipe.cost_breakdown %>
+            <!-- Margin (if available) -->
+            <%= if @grouped_recipe.product.margin != nil && @grouped_recipe.product.market_price do %>
+              <div class="flex items-center gap-2">
+                <span class={[
+                  "font-semibold",
+                  @grouped_recipe.product.margin >= 0 && "text-emerald-700",
+                  @grouped_recipe.product.margin < 0 && "text-red-700",
+                ]}>
+                  <%= if @grouped_recipe.product.margin >= 0, do: "📈", else: "📉" %> Margin:
+                </span>
+                <div class="relative group">
+                  <div class={[
+                    "font-mono text-lg font-bold px-3 py-1 rounded-md cursor-help border",
+                    @grouped_recipe.product.margin >= 0 && "text-emerald-900 bg-emerald-50 border-emerald-200",
+                    @grouped_recipe.product.margin < 0 && "text-red-900 bg-red-50 border-red-200",
+                  ]}>
+                    <%= Float.round(@grouped_recipe.product.margin, 2) %>%
+                  </div>
+                  <!-- Hover Tooltip -->
+                  <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none shadow-lg">
+                    <div class="font-semibold mb-1">Margin Calculation:</div>
+                    <div class="space-y-1">
+                      <div>Market Price: <%= ViewHelpers.format_number_with_commas(@grouped_recipe.product.market_price) %></div>
+                      <div>Cost Per: <%= if @grouped_recipe.product.cost_per, do: ViewHelpers.format_number_with_commas(@grouped_recipe.product.cost_per), else: "N/A" %></div>
+                      <div class="border-t border-gray-700 pt-1">
+                        Formula: ((Market - Cost) / Cost) × 100
+                      </div>
+                      <div>
+                        = ((<%= ViewHelpers.format_number_with_commas(@grouped_recipe.product.market_price) %> - <%= if @grouped_recipe.product.cost_per, do: ViewHelpers.format_number_with_commas(@grouped_recipe.product.cost_per), else: "0" %>) / <%= if @grouped_recipe.product.cost_per, do: ViewHelpers.format_number_with_commas(@grouped_recipe.product.cost_per), else: "1" %>) × 100
+                      </div>
+                      <div class="font-semibold">
+                        = <%= Float.round(@grouped_recipe.product.margin, 2) %>%
+                      </div>
+                    </div>
+                    <!-- Tooltip Arrow -->
+                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+            
+            <!-- Total Cost -->
+            <div class="flex items-center gap-2">
+              <span class="text-amber-700 font-semibold">💰 Total Cost:</span>
+              <div class="text-amber-900 font-mono text-lg font-bold bg-amber-50 border border-amber-200 px-3 py-1 rounded-md">
+                <%= @grouped_recipe.cost_breakdown %>
+              </div>
+            </div>
           </div>
         </div>
-      </div>      <!-- Recipe Media Sections -->
+      </div><!-- Recipe Media Sections -->
       <div class="space-y-6">
       <%= for %{media: media, materials: materials} <- @grouped_recipe.by_media do %>
         <% recipe_spec = RecipeSpecs.get_recipe_spec_by_product_and_media(@grouped_recipe.product.id, media) %>

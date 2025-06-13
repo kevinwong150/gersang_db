@@ -120,7 +120,6 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
 
     {:noreply, assign(socket, :expanded_nodes, updated_expanded_nodes)}
   end
-
   def handle_event("collapse_all", %{"item-id" => item_id}, socket) do
     item_id_int = String.to_integer(item_id)
     expanded_nodes = socket.assigns.expanded_nodes
@@ -135,6 +134,52 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
       end)
 
     {:noreply, assign(socket, :expanded_nodes, updated_expanded_nodes)}
+  end
+
+  def handle_event("update_cost", %{"item-id" => item_id}, socket) do
+    item_id_int = String.to_integer(item_id)
+
+    # Calculate the total cost for this item
+    total_cost = calculate_materials_cost(item_id_int, socket.assigns.materials_tree, socket.assigns.ingredient_costs)
+
+    # Get the item to access its market price
+    item_node = get_item_from_nodes(item_id_int, socket.assigns.materials_tree)
+
+    if item_node do
+      item = item_node.item
+      market_price = item.market_price || 0
+
+      # Calculate margin as percentage: ((market_price - cost_per) / cost_per) * 100
+      margin = if total_cost > 0 do
+        ((market_price - total_cost) / total_cost) * 100
+      else
+        0.0
+      end
+
+      # Update the item with calculated cost and margin
+      case GersangDb.GersangItem.update_item(item, %{
+        cost_per: total_cost,
+        margin: margin
+      }) do
+        {:ok, updated_item} ->
+          # Update the materials tree with the updated item
+          updated_materials_tree = update_item_in_materials_tree(socket.assigns.materials_tree, updated_item)
+
+          socket =
+            socket
+            |> assign(:materials_tree, updated_materials_tree)
+            |> put_flash(:info, "Cost updated successfully! Total cost: #{ViewHelpers.format_number_with_commas(total_cost)}, Margin: #{Float.round(margin, 2)}%")
+
+          {:noreply, socket}
+
+        {:error, _changeset} ->
+          socket = put_flash(socket, :error, "Failed to update cost")
+          {:noreply, socket}
+      end
+    else
+      socket = put_flash(socket, :error, "Item not found")
+      {:noreply, socket}
+    end
   end
 
   def build_materials_tree(%GersangDb.Domain.GersangItem{} = product) do
@@ -287,16 +332,23 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
                       × <%= @node.amount %>
                     </span>
                   <% end %>
-                  <!-- Production Fee Display -->
-                  <%= if @node.production_fee && @node.production_fee > 0 do %>
-                    <span class="px-2 py-1 text-xs font-bold bg-orange-100 text-orange-800 rounded-full border border-orange-300 shadow-sm" title="Production Fee">
-                      🔧 <%= ViewHelpers.format_number_with_commas(@node.production_fee) %>
-                    </span>
-                  <% end %>
                   <!-- Production Amount Display -->
                   <%= if @node.production_amount && @node.production_amount > 1 do %>
                     <span class="px-2 py-1 text-xs font-bold bg-green-100 text-green-800 rounded-full border border-green-300 shadow-sm" title="Production Amount">
                       📦 <%= @node.production_amount %>
+                    </span>
+                  <% end %>
+                  <!-- Margin Display - Only for root product (layer 0) -->
+                  <%= if @layer_index == 0 && @node.item.margin do %>
+                    <span class={[
+                      "px-2 py-1 text-xs font-bold rounded-full border shadow-sm",
+                      if @node.item.margin >= 0 do
+                        "bg-emerald-100 text-emerald-800 border-emerald-300"
+                      else
+                        "bg-red-100 text-red-800 border-red-300"
+                      end
+                    ]} title="Profit Margin">
+                      <%= if @node.item.margin >= 0, do: "📈", else: "📉" %> <%= Float.round(@node.item.margin, 2) %>%
                     </span>
                   <% end %>
                 </div>
@@ -319,10 +371,8 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
                 <% end %>
               </div>
 
-              <span class="text-xs text-slate-500 font-medium"># <%= @node.item.id %></span>
-
-              <!-- Production Information Section -->
-              <%= if @node.production_fee && @node.production_fee > 0 || @node.production_amount && @node.production_amount > 1 do %>
+              <span class="text-xs text-slate-500 font-medium"># <%= @node.item.id %></span>              <!-- Production Information Section -->
+              <%= if @node.production_fee && @node.production_fee > 0 || @node.production_amount && @node.production_amount > 1 || (@layer_index == 0 && @node.item.cost_per) do %>
                 <div class="mt-2 flex gap-3 text-xs">
                   <%= if @node.production_fee && @node.production_fee > 0 do %>
                     <div class="flex items-center gap-1 px-2 py-1 bg-orange-50 border border-orange-200 rounded-md">
@@ -336,12 +386,17 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
                       <span class="text-green-800 font-bold"><%= @node.production_amount %> items</span>
                     </div>
                   <% end %>
+                  <!-- Saved Cost Per Display - Only for root product (layer 0) -->
+                  <%= if @layer_index == 0 && @node.item.cost_per do %>
+                    <div class="flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-200 rounded-md">
+                      <span class="text-blue-600 font-medium">💾 Saved Cost:</span>
+                      <span class="text-blue-800 font-bold"><%= ViewHelpers.format_number_with_commas(@node.item.cost_per) %></span>
+                    </div>
+                  <% end %>
                 </div>
               <% end %>
             </div>
-          </div>
-
-          <%= if @has_children do %>
+          </div>          <%= if @has_children do %>
             <!-- Expand All / Collapse All Buttons -->
             <div class="flex gap-2">
               <button
@@ -364,6 +419,20 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
               >
                 ↑ Collapse All
               </button>
+
+              <!-- Update Cost Button - Only for root product (layer 0) -->
+              <%= if @layer_index == 0 do %>
+                <button
+                  type="button"
+                  phx-click="update_cost"
+                  phx-value-item-id={@node.item.id}
+                  phx-target={@target_handler}
+                  class="px-3 py-1.5 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg border border-blue-300 transition-colors font-medium shadow-sm cursor-pointer"
+                  title="Save calculated cost to database and update margin"
+                >
+                  💾 Update Cost
+                </button>
+              <% end %>
             </div>
           <% end %>
         </div>
@@ -761,7 +830,6 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
       Map.put(acc, item.id, true)
     end)
   end
-
   # Helper function to get all descendant IDs for a given item
   defp get_all_descendant_ids(item_id, materials_tree) do
     item_layer = get_item_layer(item_id, materials_tree)
@@ -782,5 +850,24 @@ defmodule GersangDbWeb.RecipeLive.RecipesCostCalculator do
         get_descendants_recursive(child_item.id, layer + 1, materials_tree, current_acc)
       end)
     end
+  end
+
+  # Helper function to update an item in the materials tree
+  defp update_item_in_materials_tree(materials_tree, updated_item) do
+    materials_tree
+    |> Enum.map(fn {layer_key, nodes} ->
+      updated_nodes =
+        nodes
+        |> Enum.map(fn node ->
+          if node.item.id == updated_item.id do
+            %{node | item: updated_item}
+          else
+            node
+          end
+        end)
+
+      {layer_key, updated_nodes}
+    end)
+    |> Enum.into(%{})
   end
 end
