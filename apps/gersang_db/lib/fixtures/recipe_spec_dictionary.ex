@@ -96,7 +96,7 @@ defmodule Data.Dictionary.RecipeSpecs do
         %{product_name: fetch_item_name.("red_powder"), production_fee: 2500000, production_amount: 10, media: "Alchemist"},
         %{product_name: fetch_item_name.("black_powder"), production_fee: 1000000, production_amount: 20, media: "Alchemist"},
         %{product_name: fetch_item_name.("white_powder"), production_fee: 10000, production_amount: 20, media: "Alchemist"},
-        %{product_name: fetch_item_name.("blue_powder"), production_fee: 300000, production_amount: 1, media: "Alchemist"},
+        %{product_name: fetch_item_name.("blue_powder"), production_fee: 300000, production_amount: 20, media: "Alchemist"},
         %{product_name: fetch_item_name.("sword_seal"), production_fee: 5000000, production_amount: 1, media: "Alchemist"},
         %{product_name: fetch_item_name.("component_seal"), production_fee: 5000000, production_amount: 1, media: "Alchemist"},
         %{product_name: fetch_item_name.("storage_ticket"), production_fee: 10000000, production_amount: 1, media: "Alchemist"},

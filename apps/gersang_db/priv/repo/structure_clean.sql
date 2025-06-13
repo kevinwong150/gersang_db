@@ -17,15 +17,6 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: gersang_db
---
-
--- *not* creating schema, since initdb creates it
-
-
-ALTER SCHEMA public OWNER TO gersang_db;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -39,7 +30,7 @@ CREATE TABLE public.gersang_items (
     name character varying(255) NOT NULL,
     tags character varying(255)[],
     margin double precision,
-    market_price integer,
+    market_price bigint,
     cost_per double precision,
     inserted_at timestamp(0) without time zone NOT NULL,
     updated_at timestamp(0) without time zone NOT NULL
@@ -209,11 +200,11 @@ COPY public.recipes (id, product_item_id, material_item_id, material_amount, ins
 --
 
 COPY public.schema_migrations (version, inserted_at) FROM stdin;
-20240226160600	\N
-20250524025539	2025-05-31 18:22:42
-20250607120154	2025-06-07 17:07:30
-20250607130157	2025-06-07 17:07:30
-20250607143507	2025-06-07 17:07:30
+20240226160600	2025-06-13 18:24:42
+20250524025539	2025-06-13 18:24:42
+20250607120154	2025-06-13 18:24:42
+20250607130157	2025-06-13 18:24:42
+20250607143507	2025-06-13 18:24:42
 \.
 
 
@@ -221,21 +212,21 @@ COPY public.schema_migrations (version, inserted_at) FROM stdin;
 -- Name: gersang_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: gersang_db
 --
 
-SELECT pg_catalog.setval('public.gersang_items_id_seq', 236, true);
+SELECT pg_catalog.setval('public.gersang_items_id_seq', 1, false);
 
 
 --
 -- Name: recipe_spec_id_seq; Type: SEQUENCE SET; Schema: public; Owner: gersang_db
 --
 
-SELECT pg_catalog.setval('public.recipe_spec_id_seq', 31, true);
+SELECT pg_catalog.setval('public.recipe_spec_id_seq', 1, false);
 
 
 --
 -- Name: recipes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: gersang_db
 --
 
-SELECT pg_catalog.setval('public.recipes_id_seq', 76, true);
+SELECT pg_catalog.setval('public.recipes_id_seq', 1, false);
 
 
 --
@@ -307,14 +298,6 @@ ALTER TABLE ONLY public.recipes
 
 ALTER TABLE ONLY public.recipes
     ADD CONSTRAINT recipes_recipe_spec_id_fkey FOREIGN KEY (recipe_spec_id) REFERENCES public.recipe_spec(id) ON DELETE CASCADE;
-
-
---
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: gersang_db
---
-
-REVOKE USAGE ON SCHEMA public FROM PUBLIC;
-GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
