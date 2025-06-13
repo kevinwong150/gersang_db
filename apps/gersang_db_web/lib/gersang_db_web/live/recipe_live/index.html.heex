@@ -7,16 +7,77 @@
   </:actions>
 </.header>
 
-<div class="space-y-8">
-  <%= for grouped_recipe <- @grouped_recipes do %>
-    <.live_component
-      module={GersangDbWeb.RecipeLive.GroupedRecipeComponent}
-      id={"grouped-recipe-#{grouped_recipe.product.id}"}
-      grouped_recipe={grouped_recipe}
-      source={:index}
-    />
-  <% end %>
+<!-- Search Section -->
+<div class="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200 shadow-sm">
+  <div class="max-w-2xl mx-auto">
+    <h3 class="text-lg font-semibold text-blue-900 mb-4 text-center">🔍 Search Recipes</h3>
+    <form phx-change="search" phx-submit="search" class="space-y-4">
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <input
+            type="text"
+            name="search"
+            value={@search_query}
+            placeholder="Search by product name (e.g., Iron Sword, Health Potion)..."
+            class="w-full px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+            phx-debounce="300"
+          />
+        </div>
+        <%= if @search_query != "" do %>
+          <button
+            type="button"
+            phx-click="clear_search"
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg border border-gray-300 transition-colors duration-200"
+            title="Clear search"
+          >
+            ✕ Clear
+          </button>
+        <% end %>
+      </div>
+    </form>
+    
+    <%= if @search_query != "" and not @show_search_results do %>
+      <div class="mt-3 text-center text-gray-600">
+        <p class="text-sm">Enter a search term to find recipes...</p>
+      </div>
+    <% end %>
+    
+    <%= if @show_search_results and @search_query != "" do %>
+      <div class="mt-3 text-center">
+        <p class="text-sm text-blue-700">
+          <%= if Enum.empty?(@grouped_recipes) do %>
+            No recipes found for "<%= @search_query %>"
+          <% else %>
+            Found <%= Enum.count(@grouped_recipes) %> recipe(s) for "<%= @search_query %>"
+          <% end %>
+        </p>
+      </div>
+    <% end %>
+  </div>
 </div>
+
+<!-- Results Section -->
+<%= if @show_search_results do %>
+  <div class="space-y-8">
+    <%= for grouped_recipe <- @grouped_recipes do %>
+      <.live_component
+        module={GersangDbWeb.RecipeLive.GroupedRecipeComponent}
+        id={"grouped-recipe-#{grouped_recipe.product.id}"}
+        grouped_recipe={grouped_recipe}
+        source={:index}
+      />
+    <% end %>
+  </div>
+<% else %>
+  <div class="text-center py-12 text-gray-500">
+    <div class="mb-4 text-4xl">📋</div>
+    <h3 class="text-lg font-medium mb-2">Welcome to Recipe Search</h3>
+    <p class="text-sm max-w-md mx-auto">
+      Use the search box above to find recipes by product name. 
+      You can search for items like "Iron Sword", "Health Potion", or any other crafted item.
+    </p>
+  </div>
+<% end %>
 
 <.modal :if={@live_action in [:new, :edit]} id="gersang_recipe-modal" show on_cancel={JS.patch(~p"/gersang/recipes")}> 
   <.live_component

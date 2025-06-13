@@ -7,22 +7,17 @@ defmodule GersangDbWeb.RecipeLive.Index do
   alias GersangDb.RecipeSpecs
   alias GersangDb.Domain.Recipe
   alias GersangDb.GersangItem
-
   @impl true
   def mount(_params, _session, socket) do
     gersang_item_options = Enum.map(GersangItem.list_items(), fn item -> {item.name, item.id} end)
 
-    recipes =
-      Recipes.list_recipes()
-      |> Repo.preload([:product_item, :recipe_spec])
-
-    grouped_recipes = build_grouped_recipe(recipes)
-
     socket =
       socket
-      |> assign(:grouped_recipes, grouped_recipes)
+      |> assign(:grouped_recipes, [])
       |> assign(:gersang_item_options, gersang_item_options)
-      |> stream(:gersang_recipes, recipes)
+      |> assign(:search_query, "")
+      |> assign(:show_search_results, false)
+      |> stream(:gersang_recipes, [])
 
     {:ok, socket}
   end
@@ -65,6 +60,42 @@ defmodule GersangDbWeb.RecipeLive.Index do
         end
       )
     {:noreply, stream(socket, :gersang_recipes, updated_stream)}
+  end
+
+  @impl true
+  def handle_event("search", %{"search" => search_query}, socket) do
+    search_query = String.trim(search_query)
+
+    if search_query == "" do
+      {:noreply,
+       socket
+       |> assign(:grouped_recipes, [])
+       |> assign(:search_query, "")
+       |> assign(:show_search_results, false)
+       |> stream(:gersang_recipes, [])}
+    else
+      # Search for recipes
+      search_params = %{product_name: search_query}
+      recipes = Recipes.search_recipes(search_params)
+      grouped_recipes = build_grouped_recipe(recipes)
+
+      {:noreply,
+       socket
+       |> assign(:grouped_recipes, grouped_recipes)
+       |> assign(:search_query, search_query)
+       |> assign(:show_search_results, true)
+       |> stream(:gersang_recipes, recipes)}
+    end
+  end
+
+  @impl true
+  def handle_event("clear_search", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:grouped_recipes, [])
+     |> assign(:search_query, "")
+     |> assign(:show_search_results, false)
+     |> stream(:gersang_recipes, [])}
   end
 
   @impl true

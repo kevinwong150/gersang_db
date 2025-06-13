@@ -21,6 +21,57 @@ defmodule GersangDb.Gersang.Recipes do
   end
 
   @doc """
+  Searches recipes by various criteria including product name.
+
+  ## Examples
+
+      iex> search_recipes(%{product_name: "Iron"})
+      [%Recipe{}, ...]
+
+      iex> search_recipes(%{product_name: "Iron", material_name: "Ore"})
+      [%Recipe{}, ...]
+
+  """
+  def search_recipes(search_params) do
+    query = from(r in Recipe,
+      join: p in assoc(r, :product_item),
+      join: m in assoc(r, :material_item),
+      join: rs in assoc(r, :recipe_spec),
+      preload: [:product_item, :material_item, :recipe_spec]
+    )
+
+    query = apply_search_filters(query, search_params)
+
+    Repo.all(query)
+  end
+
+  defp apply_search_filters(query, search_params) when is_map(search_params) do
+    Enum.reduce(search_params, query, fn {key, value}, acc_query ->
+      case key do
+        :product_name when is_binary(value) and value != "" ->
+          from([r, p, m, rs] in acc_query, where: ilike(p.name, ^"%#{value}%"))
+
+        :material_name when is_binary(value) and value != "" ->
+          from([r, p, m, rs] in acc_query, where: ilike(m.name, ^"%#{value}%"))
+
+        :media when is_binary(value) and value != "" ->
+          from([r, p, m, rs] in acc_query, where: ilike(rs.media, ^"%#{value}%"))
+
+        :product_id when is_integer(value) ->
+          from([r, p, m, rs] in acc_query, where: r.product_item_id == ^value)
+
+        :material_id when is_integer(value) ->
+          from([r, p, m, rs] in acc_query, where: r.material_item_id == ^value)
+
+        _ ->
+          acc_query
+      end
+    end)
+  end
+
+  defp apply_search_filters(query, _), do: query
+
+  @doc """
   Gets a single recipe.
 
   Raises `Ecto.NoResultsError` if the Recipe does not exist.
