@@ -50,6 +50,10 @@ defmodule GersangDb.GersangItem do
       iex> get_item_by_name("Non Existent Item")
       nil
   """
+  def get_item_by_name(nil) do
+    nil
+  end
+
   def get_item_by_name(name) do
     Repo.get_by(GersangItem, name: name)
   end
