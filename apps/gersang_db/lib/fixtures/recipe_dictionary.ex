@@ -934,7 +934,7 @@ defmodule Data.Dictionary.Recipes do
         %{
           product_item_name: fetch_item_name.("five_color_crystal"),
           material_items: [
-            %{name: fetch_item_name.("five_color_crystal_powder_fragment"), material_amount: 10},
+            %{name: fetch_item_name.("five_color_crystal_powder_fragment"), material_amount: 5},
             %{name: fetch_item_name.("sealed_power_shard"), material_amount: 2},
             %{name: fetch_item_name.("tranquilizer"), material_amount: 1},
             %{name: fetch_item_name.("polish_powder"), material_amount: 40}
