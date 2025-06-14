@@ -19,10 +19,13 @@ defmodule Data.Dictionary.Recipes do
         %{
           product_item_name: fetch_item_name.("sealed_power_shard"),
           material_items: [
-            %{
-              name: fetch_item_name.("sealed_power_piece"),
-              material_amount: 10
-            }
+            %{name: fetch_item_name.("sealed_power_piece"), material_amount: 10}
+          ]
+        },
+        %{
+          product_item_name: fetch_item_name.("five_color_crystal_powder_fragment"),
+          material_items: [
+            %{name: fetch_item_name.("five_color_crystal_powder"), material_amount: 10}
           ]
         },
         %{
