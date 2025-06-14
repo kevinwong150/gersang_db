@@ -58,7 +58,7 @@ defmodule GersangDbWeb.RecipeLive.GroupedRecipeComponent do
                 </div>
               </div>
             <% end %>
-            
+
             <!-- Total Cost -->
             <div class="flex items-center gap-2">
               <span class="text-amber-700 font-semibold">💰 Total Cost:</span>
